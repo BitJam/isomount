@@ -313,9 +313,9 @@ show_mounts() {
     echo "$data"
 }
 
-clean() {
+clean_mounts() {
     local name what n
-    for name; do
+    for name in $ISO_NAME $SQ_NAME; do
         for n in $(seq 1 $MAX_DIRS); do
             what=$MNT_DIR/$name$n
             mountpoint -q "$what" && continue
