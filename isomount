@@ -155,8 +155,7 @@ clean() {
         for n in $(seq 1 $MAX_DIRS); do
             what=$MNT_DIR/$name$n
             mountpoint -q "$what" && continue
-            echo "$what"
-            test -d "$what" && $SUDO rmdir -f "$what"
+            test -d "$what" && $SUDO rmdir  "$what"
             $SUDO rm -f "$what"@*
         done
     done
