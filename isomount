@@ -8,45 +8,187 @@ MY_NAME=${0##*/}
 ME=${ACTION:=$MY_NAME}
 
 MAX_DIRS=20
-MNT_DIR="/mnt"
-
+ MNT_DIR="/mnt"
 ISO_NAME="iso"
  SQ_NAME="sq"
-SQ_FILE="antiX/linuxfs"
+ SQ_FILE="antiX/linuxfs"
 
 SUDO="sudo"
 [ $UID -eq 0 ] && SUDO=
 
-main() {
+iso_mount_usage() {
+    local fname=$MNT_DIR/${ISO_NAME}1
+    cat <<Usage
+Usage: $ME [options] /path/to/file.iso
+    Mount the iso file specified at a directory like $fname.  If
+    it is an MX or antiX iso then also mount the /$SQ_FILE file
+    as a squashfs file.
 
+    Also create the file $fname@<name> where <name> if the path to
+    the mounted file with slashes converted to dashes.
+Usage
+    opt_usage
+}
+
+sq_mount_usage() {
+    local fname=$MNT_DIR/${SQ_NAME}1
+    cat <<Usage
+Usage: $ME [options] /path/to/squashfs-file
+    Mount the squashfs file specified at a directory like $fname/
+
+    Also create the file $fname@<name> where <name> is the path to
+    the mounted file with slashes converted to dashes.
+Usage
+    opt_usage
+}
+
+iso_umount_usage() {
+    local fname=$MNT_DIR/${ISO_NAME}N
+    cat <<Usage
+Usage: $ME [options] [$fname]
+    Umount the most recently mounted iso file.  If a mountpoint is
+    given then unmount that mountpoint instead.  In both cases we also
+    delete the mountpoint directory and the the $fname@<name> file.
+Usage
+    opt_usage
+}
+
+sq_umount_usage() {
+    local fname=$MNT_DIR/${SQ_NAME}N
+    cat <<Usage
+Usage: $ME [options] [$fname]
+    Umount the most recently mounted squashfs file.  If a mountpoint is
+    given then unmount that mountpoint instead.  In both cases we also
+    delete the mountpoint directory and the the $fname@<name> file.
+Usage
+    opt_usage
+}
+
+clean_usage() {
+    cat <<Usage
+Usage: $ME [options]
+    Clean up leftover mountpoint directories and @ files.
+Usage
+    opt_usage
+}
+
+show_usage() {
+    cat <<Usage
+Usage: $ME [options]
+    Show the currently mounted iso and squashfs files
+Usage
+    opt_usage
+}
+
+opt_usage() {
+    cat <<Usage
+
+Options:
+    -c --color=<xxx>   set color scheme to off|low|low2|bw|dark|high
+    -h --help          show this usage
+    -q --quiet         don't show mountpoint(s)
+    -s --silent        don't print anything except errors
+    -v --verbose       be more verbose
+Usage
+}
+
+usage() {
     case $ME in
-        isoumount) any_umount "$ISO_NAME"       ;;
-         isomount) iso_mount  "$@"              ;;
-         squmount) any_umount "$SQ_NAME"        ;;
-          sqmount) sq_mount   "$@"              ;;
-   clean-isomount) clean "$ISO_NAME" "$SQ_NAME" ;;
-    show-isomount)                              ;;
-                *) fatal "Unknown program name %s" $ME ;;
+             isomount) iso_mount_usage     ;;
+              sqmount) sq_mount_usage      ;;
+            isoumount) iso_umount_usage    ;;
+             squmount) sq_umount_usage     ;;
+       clean-isomount) clean_usage         ;;
+        show-isomount) show_usage          ;;
+                    *) fatal "Unknown program name %s" $ME ;;
     esac
 
-    show_mounts
+    exit 0
+}
+
+takes_param() {
+    case $1 in
+        -color|c) return 0 ;;
+               *) return 1 ;;
+    esac
+}
+
+assign_parameter() {
+    local cnt=$1 param=$2
+    CMD_CMDS="$CMD_CMDS${CMD_CMDS:+ }$param"
+}
+
+eval_argument() {
+    local arg=$1  val=$2
+    case $arg in
+         -color|c)  COLOR_SCHEME=$val  ;;
+         -color=*)  COLOR_SCHEME=$val  ;;
+          -help|h)  usage              ;;
+         -quiet|q)  BE_QUIET=true      ;;
+        -silent|s)  BE_SILENT=true     ;;
+       -verbose|v)  BE_VERBOSE=true    ;;
+                *)  fatal "Unknown parameter %s" "-$arg"  ;;
+    esac
+}
+
+main() {
+    local SHIFT SHIFT_2  SHORT_STACK="hqsv"
+    local BE_QUIET  BE_SILENT BE_VERBOSE
+
+    set_colors
+    read_all_cmdline_mingled "$@"
+
+    set_colors $COLOR_SCHEME
+
+    local max_param min_param
+    case $ME in
+          isomount|sqmount)  max_param=1  ; min_param=1 ;;
+        isoumount|squmount)  max_param=1                ;;
+                         *)  max_param=0                ;;
+    esac
+
+    [ -n "$min_param" ] && [ $# -lt $min_param ] && usage
+    check_param_cnt $max_param "$@"
+
+    case $ME in
+             isomount)  iso_mount  "$CMD_CMD"        ;;
+              sqmount)  sq_mount   "$CMD_CMD"        ;;
+             squmount)  iso_umount "$@"              ;;
+            isoumount)  iso_umount "$@"              ;;
+       clean-isomount)  clean "$ISO_NAME" "$SQ_NAME" ;;
+        show-isomount)  show_mounts ; exit 0         ;;
+                    *)  fatal "Unknown program name %s" $ME ;;
+    esac
+
+    [ -z "$BE_SILENT$BE_QUIET" ] && show_mounts
     exit 0
 }
 
 iso_mount() {
     local what=$1
-    any_mount "$what" "$ISO_NAME" -o loop,user,ro,exec -t iso9660
+    any_mount "$ISO_NAME" "$what" -o loop,user,ro,exec -t iso9660
 
 }
 
 sq_mount() {
     local what=$1
-    any_mount "$what" "$SQ_NAME" -o loop,user,ro,exec -t squashfs
+    any_mount "$SQ_NAME" "$what"  -o loop,user,ro,exec -t squashfs
 }
 
-any_mount() {
-    local what=$1  name=$2  where  n; shift 2
+iso_umount() {
+    local where=$1  name=$ISO_NAME
+    any_umount "$name" $where
+}
 
+sq_umount() {
+    local where=$1  name=$SQ_NAME
+    any_umount "$name" $where
+}
+
+
+any_mount() {
+    verbose "any_mount( %s )" "$bold_co$*$m_co"
+    local name=$1  what=$2    where  n; shift 2
     [ -z "$what" ]  && fatal "Need to say what we should %s"   "$ME"
 
     test -e "$what" || fatal "Can not find file: %s"           "$what"
@@ -84,13 +226,24 @@ any_mount() {
 }
 
 any_umount() {
-    local name=$1  n  where
-	for n in $(seq $MAX_DIRS -1 1); do
-		where=$MNT_DIR/$name$n
-		mountpoint -q "$where" && break
-	done
-	mountpoint -q "$where" || fatal "No %s mountpoints found" "$name"
+    verbose "any_umount( %s )" "$bold_co$*$m_co"
+    local name=$1  where=$2  n
 
+    if [ -n "$where" ]; then
+        mountpoint -q "$where" || fatal "%s is not a mountpoint" "$where"
+        name=${where##*/}
+        name=${name%%[0-9]*}
+        case $name in
+            $ISO_NAME|$SQ_NAME) ;;
+            *) fatal "Unrecognized name %s" "$name" ;;
+        esac
+    else
+        for n in $(seq $MAX_DIRS -1 1); do
+            where=$MNT_DIR/$name$n
+            mountpoint -q "$where" && break
+        done
+        mountpoint -q "$where" || fatal "No %s mountpoints found" "$name"
+    fi
     local sq_file=$where/$SQ_FILE
     local sq_lab=$(what_lab "$sq_file")
 
@@ -132,6 +285,13 @@ fatal() {
 }
 
 say() {
+    [ "$BE_SILENT" ] && return
+    local fmt=$1 ; shift
+    printf "$ME: $m_co$fmt$nc_co\n" "$@"
+}
+
+verbose() {
+    [ "$BE_VERBOSE" ] || return
     local fmt=$1 ; shift
     printf "$ME: $m_co$fmt$nc_co\n" "$@"
 }
@@ -144,7 +304,7 @@ what_lab() {
 
 show_mounts() {
     local data=$(df -hT | grep -E " $MNT_DIR/($ISO_NAME|$SQ_NAME)[0-9]")
-    [ $(echo "$data" | wc -l) -gt 1 ] || return 
+    [ -z "$data" ] && return
     echo
     echo "$data"
 }
@@ -163,29 +323,150 @@ clean() {
 }
 
 set_colors() {
-    local noco=$1  loco=$2
-
-    [ "$noco" ] && return
+    local color=${1:-high}
 
     local e=$(printf "\e")
-     black="$e[0;30m";    blue="$e[0;34m";    green="$e[0;32m";    cyan="$e[0;36m";
-       red="$e[0;31m";  purple="$e[0;35m";    brown="$e[0;33m"; lt_gray="$e[0;37m";
-   dk_gray="$e[1;30m"; lt_blue="$e[1;34m"; lt_green="$e[1;32m"; lt_cyan="$e[1;36m";
-    lt_red="$e[1;31m"; magenta="$e[1;35m";   yellow="$e[1;33m";   white="$e[1;37m";
-     nc_co="$e[0m";
 
-    cheat_co=$white;      err_co=$red;       hi_co=$white;
-      cmd_co=$white;     from_co=$lt_green;  mp_co=$magenta;   num_co=$magenta;
-      dev_co=$magenta;   head_co=$yellow;     m_co=$lt_cyan;    ok_co=$lt_green;
-       to_co=$lt_green;  warn_co=$yellow;  bold_co=$yellow;
+    rev_co="$e[7m" ; nc_co="$e[0m"
 
-    [ "$loco" ] || return
+    if [ "$color" = 'off' ]; then
 
-    from_co=$brown
-      hi_co=$white
-       m_co=$nc_co
-     num_co=$white
+         black=  ;    blue=  ;    green=  ;    cyan=  ;
+           red=  ;  purple=  ;    brown=  ; lt_gray=  ;
+       dk_gray=  ; lt_blue=  ; lt_green=  ; lt_cyan=  ;
+        lt_red=  ; magenta=  ;   yellow=  ;   white=  ;
+         brown=  ;
+
+         inst_co=            ;  mark_co=           ;     grep_co=
+         bold_co=            ;    fs_co=           ;      num_co=            ;
+         date_co=            ;  head_co=           ;    quest_co=            ;
+          dev_co=            ;    hi_co=           ;     quit_co=            ;
+          err_co=            ;   lab_co=           ;  version_co=            ;
+        fname_co=            ;     m_co=           ;     warn_co=            ;
+         return
+     fi
+
+         black="$e[30m"   ;    blue="$e[34m"   ;    green="$e[32m"   ;    cyan="$e[36m"   ;
+           red="$e[31m"   ;  purple="$e[35m"   ;    brown="$e[33m"   ; lt_gray="$e[37m"   ;
+       dk_gray="$e[1;30m" ; lt_blue="$e[1;34m" ; lt_green="$e[1;32m" ; lt_cyan="$e[1;36m" ;
+        lt_red="$e[1;31m" ; magenta="$e[1;35m" ;   yellow="$e[1;33m" ;   white="$e[1;37m" ;
+         nc_co="$e[0m"    ;   brown="$e[33m"   ;   rev_co="$e[7m"    ;    gray="$e[37m"
+
+    case $color in
+        high)
+         inst_co=$lt_cyan    ;  mark_co=$rev_co    ;     grep_co="1;35"
+         bold_co=$yellow     ;    fs_co=$lt_blue   ;      num_co=$magenta    ;
+         date_co=$lt_cyan    ;  head_co=$white     ;    quest_co=$lt_green   ;
+          dev_co=$white      ;    hi_co=$white     ;     quit_co=$yellow     ;
+          err_co=$red        ;   lab_co=$lt_cyan   ;  version_co=$white      ;
+        fname_co=$white      ;     m_co=$lt_cyan   ;     warn_co=$yellow     ; ;;
+
+        dark)
+         inst_co=$cyan       ;  mark_co=$rev_co    ;     grep_co="1;34"
+         bold_co=$brown      ;    fs_co=$lt_blue   ;      num_co=$brown   ;
+         date_co=$cyan       ;  head_co=$gray      ;   quest_co=$green    ;
+          dev_co=$gray       ;    hi_co=$gray      ;    quit_co=$brown    ;
+          err_co=$red        ;   lab_co=$cyan      ;  version_co=$gray    ;
+        fname_co=$gray       ;     m_co=$cyan      ;     warn_co=$brown   ; ;;
+
+        low)
+         inst_co=$cyan       ;  mark_co=$rev_co    ;     grep_co="1;34"
+         bold_co=$white      ;    fs_co=$gray      ;      num_co=$white      ;
+         date_co=$gray       ;  head_co=$white     ;    quest_co=$lt_green   ;
+          dev_co=$white      ;    hi_co=$white     ;     quit_co=$lt_green   ;
+          err_co=$red        ;   lab_co=$gray      ;  version_co=$white      ;
+        fname_co=$white      ;     m_co=$gray      ;     warn_co=$yellow     ; ;;
+
+        low2)
+         inst_co=$cyan       ;  mark_co=$rev_co    ;     grep_co="1"
+         bold_co=$white      ;    fs_co=$gray      ;      num_co=$white      ;
+         date_co=$gray       ;  head_co=$white     ;    quest_co=$green      ;
+          dev_co=$white      ;    hi_co=$white     ;     quit_co=$green      ;
+          err_co=$red        ;   lab_co=$gray      ;  version_co=$white      ;
+        fname_co=$white      ;     m_co=$gray      ;     warn_co=$yellow     ; ;;
+
+        bw)
+         inst_co=$white      ;  mark_co=$rev_co    ;     grep_co="1;37"
+         bold_co=$white      ;    fs_co=$gray      ;      num_co=$white      ;
+         date_co=$gray       ;  head_co=$white     ;    quest_co=$white      ;
+          dev_co=$white      ;    hi_co=$white     ;     quit_co=$white      ;
+          err_co=$white      ;   lab_co=$lt_gray   ;  version_co=$lt_gray    ;
+        fname_co=$white      ;     m_co=$gray      ;     warn_co=$white      ; ;;
+
+        *)
+            fatal "Unknown color parameter: %s" "$color"
+    esac
 }
+
+
+read_all_cmdline_mingled() {
+
+    : ${PARAM_CNT:=0}
+    SHIFT_2=0
+
+    while [ $# -gt 0 ]; do
+        read_params "$@"
+        shift $SHIFT
+        SHIFT_2=$((SHIFT_2 + SHIFT))
+        [ -n "$END_CMDLINE" ] && return
+        while [ $# -gt 0 -a ${#1} -gt 0 -a -n "${1##-*}" ]; do
+            PARAM_CNT=$((PARAM_CNT + 1))
+            assign_parameter $PARAM_CNT "$1"
+            shift
+            SHIFT_2=$((SHIFT_2 + 1))
+        done
+    done
+}
+
+check_param_cnt() {
+    local max=$1 ; shift
+    [ $# -le $max ] && return
+    fatal "Unexpected command line parameter(s): %s" "$*"
+}
+
+read_params() {
+    # Most of this code is boiler-plate for parsing cmdline args
+    SHIFT=0
+    # These are the single-char options that can stack
+
+    local arg val
+
+    # Loop through the cmdline args
+    while [ $# -gt 0 -a ${#1} -gt 0 -a -z "${1##-*}" ]; do
+        arg=${1#-} ; shift
+        SHIFT=$((SHIFT + 1))
+
+        # Expand stacked single-char arguments
+        case $arg in
+            [$SHORT_STACK][$SHORT_STACK]*)
+                if echo "$arg" | grep -q "^[$SHORT_STACK]\+$"; then
+                    local old_cnt=$#
+                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    SHIFT=$((SHIFT - $# + old_cnt))
+                    continue
+                fi;;
+        esac
+
+        # Deal with all options that take a parameter
+        if takes_param "$arg"; then
+            [ $# -lt 1 ] && fatal $"Expected a parameter after: %s" "-$arg"
+            val=$1
+            [ -n "$val" -a -z "${val##-*}" ] \
+                && fatal $"Suspicious argument after %s: %s" "-$arg" "$val"
+            SHIFT=$((SHIFT + 1))
+            shift
+        else
+            case $arg in
+                *=*)  val=${arg#*=} ;;
+                  *)  val="???"     ;;
+            esac
+        fi
+
+        eval_argument "$arg" "$val"
+        [ "$END_CMDLINE" ] && return
+    done
+}
+
 
 set_colors
 
