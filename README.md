@@ -80,7 +80,7 @@ The following options are available for all six commands.
 
 Notes
 -----
-Normally I add use a hymen in the filenames like "iso-mount" to
+Normally I add use a hyphen in the filenames like "iso-mount" to
 make them more clear but I got rid of them in order to make
 tab completion a little easier.  The four standard commands only
 require 4 or 3 letters to be typed before you press <Tab>.
