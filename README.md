@@ -6,7 +6,7 @@ only one real script and the others are symlinks to it.
 
 Usage
 -----
-    isoomount <isofile.iso>
+    isomount <isofile.iso>
 
     Mount isofile.iso at the next avaiable spot in /mnt/iso1 -- /mnt/iso20.
     If the file /antiX/linuxfs exists then we will try to mount that too
