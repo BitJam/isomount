@@ -26,41 +26,49 @@ improvement over the scripts I've been using for many years.
 Usage
 -----
     Usage: isomount [options] /path/to/file.iso
-    Mount the iso file specified at a directory like /mnt/iso1/.  If
-    it is an MX or antiX iso then also mount the /antiX/linuxfs file
-    as a squashfs file.
 
-    Also create the file /mnt/iso1e@<name> where <name> is the path to
-    the mounted file with slashes converted to dashes.
+       Mount the iso file specified at a directory like /mnt/iso1/.  If
+       it is an MX or antiX iso then also mount the /antiX/linuxfs file
+       as a squashfs file.
+
+       Also create the file /mnt/iso1e@<name> where <name> is the path to
+       the mounted file with slashes converted to dashes.
     --------------------------------------------------------------------
 
     Usage: sqmount [options] /path/to/squashfs-file
-    Mount the squashfs file specified at a directory like /mnt/sq1/
 
-    Also create the file/mnt/sq1@<name> where <name> is the path to
-    the mounted file with slashes converted to dashes.
-    --------------------------------------------------------------------
-    Usage: isoumount [options] [$fname]
-    Umount the most recently mounted iso file.  If a mountpoint is
-    given then unmount that mountpoint instead.  In both cases we also
-    delete the mountpoint directory and the the $fname@... file.
+        Mount the squashfs file specified at a directory like /mnt/sq1/
 
+        Also create the file/mnt/sq1@<name> where <name> is the path to
+        the mounted file with slashes converted to dashes.
     --------------------------------------------------------------------
-    Usage: squmount [options] [$fname]
-    Umount the most recently mounted squashfs file.  If a mountpoint is
-    given then unmount that mountpoint instead.  In both cases we also
-    delete the mountpoint directory and the the $fname@... file.
+
+    Usage: isoumount [options] [/mnt/iso2]
+
+        Umount the most recently mounted iso file.  If a mountpoint is
+        given then unmount that mountpoint instead.  In both cases we also
+        delete the mountpoint directory and the the /mnt/iso2@<name> file.
 
     --------------------------------------------------------------------
+
+    Usage: squmount [options] [/mnt/sq2]
+
+        Umount the most recently mounted squashfs file.  If a mountpoint is
+        given then unmount that mountpoint instead.  In both cases we also
+        delete the mountpoint directory and the the /mnt/sq2@<name> file.
+    --------------------------------------------------------------------
+
     Usage: clean-isomount [options]
-    Clean up leftover mountpoint directories and @ files.
+
+        Clean up leftover mountpoint directories and @ files.
 
     --------------------------------------------------------------------
+
     Usage: show-isomount [options]
-    Show the currently mounted iso and squashfs files
 
+        Show the currently mounted iso and squashfs files
 
-Optioms
+Options
 -------
 
 The following options are available for all six commands.
