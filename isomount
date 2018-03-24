@@ -8,7 +8,7 @@ MY_NAME=${0##*/}
 ME=${ACTION:=$MY_NAME}
 
 MAX_DIRS=20
- MNT_DIR="/mnt"
+ MNT_DIR="/mnt/iso"
 ISO_NAME="iso"
  SQ_NAME="sq"
  SQ_FILE="antiX/linuxfs"
@@ -187,12 +187,18 @@ sq_umount() {
 
 
 any_mount() {
-    verbose "any_mount( %s )" "$bold_co$*$m_co"
+    verbose "any_mount( %s )" "$bold_co$*$quest_co"
     local name=$1  what=$2    where  n; shift 2
     [ -z "$what" ]  && fatal "Need to say what we should %s"   "$ME"
 
     test -e "$what" || fatal "Can not find file: %s"           "$what"
     test -f "$what" || fatal "%s does not appear to be a file" "$what"
+
+    if ! mountpoint -q "$MNT_DIR"; then
+        $SUDO mkdir -p "$MNT_DIR"
+        $SUDO mount -t tmpfs -o size=1m tmpfs "$MNT_DIR"
+        mountpoint -q "$MNT_DIR" || fatal "Could not mount %s as %s"  "$MNT_DIR" 'tmpfs'
+    fi
 
     for n in $(seq 1 $MAX_DIRS); do
         where=$MNT_DIR/$name$n
