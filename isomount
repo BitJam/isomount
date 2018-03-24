@@ -133,30 +133,28 @@ eval_argument() {
 
 main() {
     local SHIFT SHIFT_2  SHORT_STACK="hqsv"
-    local BE_QUIET  BE_SILENT BE_VERBOSE
+    local BE_QUIET  BE_SILENT BE_VERBOSE  PARAM_CNT
 
     set_colors
     read_all_cmdline_mingled "$@"
-
+    shift $SHIFT_2
     set_colors $COLOR_SCHEME
 
-    local max_param min_param
+    local max_param=0  min_param=0
     case $ME in
           isomount|sqmount)  max_param=1  ; min_param=1 ;;
         isoumount|squmount)  max_param=1                ;;
-                         *)  max_param=0                ;;
     esac
 
-    [ -n "$min_param" ] && [ $# -lt $min_param ] && usage
-    check_param_cnt $max_param "$@"
-
+    [ $PARAM_CNT -lt $min_param ] && usage
+    [ $PARAM_CNT -gt $max_param ] && fatal "Too many command line parameters"
     case $ME in
-             isomount)  iso_mount  "$CMD_CMD"        ;;
-              sqmount)  sq_mount   "$CMD_CMD"        ;;
-             squmount)  iso_umount "$@"              ;;
-            isoumount)  iso_umount "$@"              ;;
-       clean-isomount)  clean "$ISO_NAME" "$SQ_NAME" ;;
-        show-isomount)  show_mounts ; exit 0         ;;
+             isomount)  iso_mount    "$CMD_CMDS"       ;;
+              sqmount)  sq_mount     "$CMD_CMDS"       ;;
+             squmount)  iso_umount   "$@"              ;;
+            isoumount)  iso_umount   "$@"              ;;
+       clean-isomount)  clean_mounts                   ;;
+        show-isomount)  show_mounts ; exit 0          ;;
                     *)  fatal "Unknown program name %s" $ME ;;
     esac
 
