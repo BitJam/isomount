@@ -4,6 +4,25 @@ Easily mount and unmount iso files and squashfs files
 There is a lot of commonality in the scripts so there is
 only one real script and the others are symlinks to it.
 
+Quick Start
+-----------
+If you clone or copy this repo then you can use the utilities
+directly from the repo.  Example:
+
+    ./isomount /some/iso-file.iso
+
+Use the follow command to install the utilities to /usr/local/bin
+
+    sudo make install ROOT=
+
+Here are the other Makefile commands:
+
+    make help                 show this help
+    make install              install to current directory
+
+The utilities are still rough around the edges but they are a big
+improvement over the scripts I've been using for many years.
+
 Usage
 -----
     isomount <isofile.iso>
