@@ -230,7 +230,7 @@ any_mount() {
 }
 
 any_umount() {
-    verbose "any_umount( %s )" "$bold_co$*$m_co"
+    verbose "any_umount( %s )" "$bold_co$*$quest_co"
     local name=$1  where=$2  n
 
     if [ -n "$where" ]; then
@@ -297,7 +297,7 @@ say() {
 verbose() {
     [ "$BE_VERBOSE" ] || return
     local fmt=$1 ; shift
-    printf "$ME: $m_co$fmt$nc_co\n" "$@"
+    printf "$ME: $quest_co$fmt$nc_co\n" "$@"
 }
 
 
