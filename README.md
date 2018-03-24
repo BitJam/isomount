@@ -25,35 +25,51 @@ improvement over the scripts I've been using for many years.
 
 Usage
 -----
-    isomount <isofile.iso>
+    Usage: isomount [options] /path/to/file.iso
+    Mount the iso file specified at a directory like /mnt/iso1/.  If
+    it is an MX or antiX iso then also mount the /antiX/linuxfs file
+    as a squashfs file.
 
-    Mount isofile.iso at the next avaiable spot in /mnt/iso1 -- /mnt/iso20.
-    If the file /antiX/linuxfs exists then we will try to mount that too
-    as a squashfs file.   Also create the file /mnt/isoN@xxx where
-    xxx is the basename of the iso file.
+    Also create the file /mnt/iso1e@<name> where <name> is the path to
+    the mounted file with slashes converted to dashes.
+    --------------------------------------------------------------------
 
-    sqmount <suashfs-file>
+    Usage: sqmount [options] /path/to/squashfs-file
+    Mount the squashfs file specified at a directory like /mnt/sq1/
 
-Mount squashfs file at the next available spot in /mnt/sq1 -- /mnt/sq20
+    Also create the file/mnt/sq1@<name> where <name> is the path to
+    the mounted file with slashes converted to dashes.
+    --------------------------------------------------------------------
+    Usage: isoumount [options] [$fname]
+    Umount the most recently mounted iso file.  If a mountpoint is
+    given then unmount that mountpoint instead.  In both cases we also
+    delete the mountpoint directory and the the $fname@... file.
 
-    isoumount
+    --------------------------------------------------------------------
+    Usage: squmount [options] [$fname]
+    Umount the most recently mounted squashfs file.  If a mountpoint is
+    given then unmount that mountpoint instead.  In both cases we also
+    delete the mountpoint directory and the the $fname@... file.
 
-    Unmount the most recent mounted iso file.  If the /antiX/squashfs
-    file was mounted by us then unmount that first (even if it wasn't
-    the most recent).  Also remove the matching @ files.
+    --------------------------------------------------------------------
+    Usage: clean-isomount [options]
+    Clean up leftover mountpoint directories and @ files.
 
-    squmount
+    --------------------------------------------------------------------
+    Usage: show-isomount [options]
+    Show the currently mounted iso and squashfs files
 
-    Umount the most recently mounted squashfs file.  Also remove the
-    matching @ file.
 
-    clean-isomount
+Optioms
+-------
 
-    Remove all unused directories and @ files
+The following options are available for all six commands.
 
-    show-isomount
-
-    Show all of our curent iso and squashfs mounts
+    -c --color=<xxx>   set color scheme to off|low|low2|bw|dark|high
+    -h --help          show this usage
+    -q --quiet         don't show mountpoint(s)
+    -s --silent        don't print anything except errors
+    -v --verbose       be more verbose
 
 Notes
 -----
