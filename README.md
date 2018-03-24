@@ -48,7 +48,6 @@ Usage
         Umount the most recently mounted iso file.  If a mountpoint is
         given then unmount that mountpoint instead.  In both cases we also
         delete the mountpoint directory and the the /mnt/iso2@<name> file.
-
     --------------------------------------------------------------------
 
     Usage: squmount [options] [/mnt/sq2]
@@ -61,12 +60,12 @@ Usage
     Usage: clean-isomount [options]
 
         Clean up leftover mountpoint directories and @ files.
-
     --------------------------------------------------------------------
 
     Usage: show-isomount [options]
 
         Show the currently mounted iso and squashfs files
+    --------------------------------------------------------------------
 
 Options
 -------
