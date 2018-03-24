@@ -11,7 +11,7 @@ directly from the repo.  Example:
 
     ./isomount /some/iso-file.iso
 
-Use the follow command to install the utilities to /usr/local/bin
+Use the following command to install the utilities to /usr/local/bin
 
     sudo make install ROOT=
 
