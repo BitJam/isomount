@@ -34,7 +34,7 @@ improvement over the scripts I've been using for many years.
 
 Usage
 -----
-    Usage: **isomount [options] /path/to/file.iso**
+Usage: **isomount [options] /path/to/file.iso**
 
         Mount the iso file specified at a directory like /mnt/iso1/.  If
         it is an MX or antiX iso then also mount the /antiX/linuxfs file
@@ -44,7 +44,7 @@ Usage
         <name> is the path to the mounted file.
     --------------------------------------------------------------------
 
-    Usage: **sqmount [options] /path/to/squashfs-file**
+Usage: **sqmount [options] /path/to/squashfs-file**
 
         Mount the squashfs file specified at a directory like /mnt/sq1/
 
@@ -52,7 +52,7 @@ Usage
         <name> is the path to the mounted file.
     --------------------------------------------------------------------
 
-    Usage: **isoumount [options] [/mnt/iso2|'all']**
+Usage: **isoumount [options] [/mnt/iso2|'all']**
 
         Umount the most recently mounted iso file.  If a mountpoint is
         given then unmount that mountpoint instead.  In both cases we also
@@ -62,7 +62,7 @@ Usage
         the status file.
     --------------------------------------------------------------------
 
-    Usage: **squmount [options] [/mnt/sq2|'all']**
+Usage: **squmount [options] [/mnt/sq2|'all']**
 
         Umount the most recently mounted squashfs file.  If a mountpoint is
         given then unmount that mountpoint instead.  In both cases we also
@@ -72,12 +72,12 @@ Usage
         the status file.
     --------------------------------------------------------------------
 
-    Usage: **clean-isomount [options]**
+Usage: **clean-isomount [options]**
 
         Clean up leftover mountpoint directories and @ files.
     --------------------------------------------------------------------
 
-    Usage: **show-isomount [options]**
+Usage: **show-isomount [options]**
 
         Show the currently mounted iso and squashfs files
     --------------------------------------------------------------------
