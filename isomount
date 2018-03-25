@@ -134,7 +134,7 @@ Usage
 usage() {
 
     show_version
-    echo
+    printf "\n"
 
     if [ "$1" == 'all' ]; then
         DONT_SHOW_OPTS=true
@@ -329,7 +329,7 @@ any_mount() {
 
     $SUDO touch $STAT_FILE
     $SUDO sed -i "/^$mp@/d" $STAT_FILE
-    echo "$mp@$what" | $SUDO tee -a $STAT_FILE > /dev/null
+    printf "%s\n" "$mp@$what" | $SUDO tee -a $STAT_FILE > /dev/null
 
     local sq_file=$where/$SQ_FILE
     [ "$name" == "$ISO_NAME" -a -e "$sq_file" ] || return
@@ -487,7 +487,7 @@ Show_Mounts
         [ $w_file -lt ${#lab_file} ] && fatal "The screen appears to be way too narrow!"
     fi
 
-    echo
+    printf "\n"
     local hfmt="$head_co%-${w_file}s  %-${w_type}s  %${w_size}s  %-${w_mp}s$nc_co\n"
     printf "$hfmt" 'File' 'Type' 'Size' 'Mount Point'
 
@@ -502,7 +502,7 @@ Show_Mounts
 $(echo "$data")
 Show_Mounts
     [ -n "$BE_VERBOSE" -a -e "$STAT_FILE" ] || return
-    echo
+    printf "\n"
     printf "$white%s$nc_co\n" "Status File"
     cat $STAT_FILE
 }
@@ -514,12 +514,12 @@ Show_Mounts
 my_truncate() {
     local max=$1  str=$2  len=${#2}
     if [ $len -le $max ]; then
-        echo "$str"
+        printf "%s\n" "$str"
         return
     fi
 
     local offset=$(( len - max + 3))
-    echo "...${str:$offset:$len}"
+    printf "%s\n" "...${str:$offset:$len}"
 }
 
 #------------------------------------------------------------------------------
