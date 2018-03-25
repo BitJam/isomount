@@ -34,44 +34,50 @@ improvement over the scripts I've been using for many years.
 
 Usage
 -----
-    Usage: isomount [options] /path/to/file.iso
+    Usage: **isomount [options] /path/to/file.iso**
 
-       Mount the iso file specified at a directory like /mnt/iso1/.  If
-       it is an MX or antiX iso then also mount the /antiX/linuxfs file
-       as a squashfs file.
+        Mount the iso file specified at a directory like /mnt/iso1/.  If
+        it is an MX or antiX iso then also mount the /antiX/linuxfs file
+        as a squashfs file.
 
-       Also create the file /mnt/iso1e@<name> where <name> is the path to
-       the mounted file with slashes converted to dashes.
+        Also add an entry in the status file like /mnt/iso1@<name> where
+        <name> is the path to the mounted file.
     --------------------------------------------------------------------
 
-    Usage: sqmount [options] /path/to/squashfs-file
+    Usage: **sqmount [options] /path/to/squashfs-file**
 
         Mount the squashfs file specified at a directory like /mnt/sq1/
 
-        Also create the file/mnt/sq1@<name> where <name> is the path to
-        the mounted file with slashes converted to dashes.
+        Also add an entry in the status file like /mnt/sq1@<name> where
+        <name> is the path to the mounted file.
     --------------------------------------------------------------------
 
-    Usage: isoumount [options] [/mnt/iso2]
+    Usage: **isoumount [options] [/mnt/iso2|'all']**
 
         Umount the most recently mounted iso file.  If a mountpoint is
         given then unmount that mountpoint instead.  In both cases we also
-        delete the mountpoint directory and the the /mnt/iso2@<name> file.
+        remove the entry from the status file.
+
+        If 'all' is given then we umount all of our mounts and empty
+        the status file.
     --------------------------------------------------------------------
 
-    Usage: squmount [options] [/mnt/sq2]
+    Usage: **squmount [options] [/mnt/sq2|'all']**
 
         Umount the most recently mounted squashfs file.  If a mountpoint is
         given then unmount that mountpoint instead.  In both cases we also
-        delete the mountpoint directory and the the /mnt/sq2@<name> file.
+        remove the entry from the status file.
+
+        If 'all' is given then we umount all of our mounts and empty
+        the status file.
     --------------------------------------------------------------------
 
-    Usage: clean-isomount [options]
+    Usage: **clean-isomount [options]**
 
         Clean up leftover mountpoint directories and @ files.
     --------------------------------------------------------------------
 
-    Usage: show-isomount [options]
+    Usage: **show-isomount [options]**
 
         Show the currently mounted iso and squashfs files
     --------------------------------------------------------------------
@@ -83,9 +89,14 @@ The following options are available for all six commands.
 
     -c --color=<xxx>   set color scheme to off|low|low2|bw|dark|high
     -h --help          show this usage
+    -q --quiet         only show mountpoints
     -q --quiet         don't show mountpoint(s)
     -s --silent        don't print anything except errors
-    -v --verbose       be more verbose
+    -v --version       show version number and exit
+    -V --verbose       be more verbose
+
+Some options don't pertain to all commands.
+
 
 Notes
 -----
