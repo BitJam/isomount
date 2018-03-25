@@ -531,7 +531,7 @@ clean_mounts() {
     for name in $ISO_NAME $SQ_NAME; do
         for n in $(seq 1 $MAX_DIRS); do
             what=$MNT_DIR/$name$n
-            mountpoint -q "$what" && echo "save: $what"
+            #mountpoint -q "$what" && echo "save: $what"
             mountpoint -q "$what" && continue
             test -d "$what" && $SUDO rmdir "$what"
             mp=${what##*/}
