@@ -24,13 +24,14 @@ SUDO="sudo"
 iso_mount_usage() {
     local fname=$MNT_DIR/${ISO_NAME}1
     cat <<Usage
-Usage: $ME [options] /path/to/file.iso
+${bold_co}Usage:${m_co} $ME [options] /path/to/file.iso${nc_co}
     Mount the iso file specified at a directory like $fname.  If
     it is an MX or antiX iso then also mount the /$SQ_FILE file
     as a squashfs file.
 
-    Also create the file $fname@<name> where <name> if the path to
-    the mounted file with slashes converted to dashes.
+    Also add an entry in the status file like /mnt/iso1@<name> where
+    <name> is the path to the mounted file.
+
 Usage
     opt_usage
 }
@@ -42,11 +43,11 @@ Usage
 sq_mount_usage() {
     local fname=$MNT_DIR/${SQ_NAME}1
     cat <<Usage
-Usage: $ME [options] /path/to/squashfs-file
+${bold_co}Usage:${m_co} $ME [options] /path/to/squashfs-file${nc_co}
     Mount the squashfs file specified at a directory like $fname/
 
-    Also create the file $fname@<name> where <name> is the path to
-    the mounted file with slashes converted to dashes.
+    Also add an entry in the status file like /mnt/sq1@<name> where
+    <name> is the path to the mounted file.
 Usage
     opt_usage
 }
@@ -58,10 +59,13 @@ Usage
 iso_umount_usage() {
     local fname=$MNT_DIR/${ISO_NAME}N
     cat <<Usage
-Usage: $ME [options] [$fname]
+${bold_co}Usage:${m_co} $ME [options] [$fname|'all']${nc_co}
     Umount the most recently mounted iso file.  If a mountpoint is
     given then unmount that mountpoint instead.  In both cases we also
-    delete the mountpoint directory and the the $fname@<name> file.
+    remove then entry from the status file.
+
+    If 'all' is given then unmount all of our mounts and all entries
+    from the status file.
 Usage
     opt_usage
 }
@@ -73,10 +77,13 @@ Usage
 sq_umount_usage() {
     local fname=$MNT_DIR/${SQ_NAME}N
     cat <<Usage
-Usage: $ME [options] [$fname]
+${bold_co}Usage:${m_co} $ME [options] [$fname|'all']${nc_co}
     Umount the most recently mounted squashfs file.  If a mountpoint is
     given then unmount that mountpoint instead.  In both cases we also
-    delete the mountpoint directory and the the $fname@<name> file.
+    delete the mountpoint directory and the $fname@<name> file.
+
+    If 'all' is given then unmount all of our mounts and all entries
+    from the status file.
 Usage
     opt_usage
 }
@@ -87,7 +94,7 @@ Usage
 #------------------------------------------------------------------------------
 clean_usage() {
     cat <<Usage
-Usage: $ME [options]
+${bold_co}Usage:${m_co} $ME [options]${nc_co}
     Clean up leftover mountpoint directories and @ files.
 Usage
     opt_usage
@@ -99,23 +106,24 @@ Usage
 #------------------------------------------------------------------------------
 show_usage() {
     cat <<Usage
-Usage: $ME [options]
+${bold_co}Usage:${m_co} $ME [options]${nc_co}
     Show the currently mounted iso and squashfs files
 Usage
     opt_usage
 }
 
 opt_usage() {
+    [ "$DONT_SHOW_OPTS" ] && return
     cat <<Usage
 
-Options:
-    -c --color=<xxx>   set color scheme to off|low|low2|bw|dark|high
-    -h --help          show this usage
-    -q --quiet         only show mountpoints
-    -q --quiet         don't show mountpoint(s)
-    -s --silent        don't print anything except errors
-    -v --version       show version number and exit
-    -V --verbose       be more verbose
+${bold_co}Options:$nc_co
+    $m_co-c --color=<xxx>  $nc_co set color scheme to off|low|low2|bw|dark|high
+    $m_co-h --help         $nc_co show this usage
+    $m_co-q --quiet        $nc_co only show mountpoints
+    $m_co-q --quiet        $nc_co don't show mountpoint(s)
+    $m_co-s --silent       $nc_co don't print anything except errors
+    $m_co-v --version      $nc_co show version number and exit
+    $m_co-V --verbose      $nc_co be more verbose
 Usage
 }
 
@@ -124,7 +132,6 @@ Usage
 #
 #------------------------------------------------------------------------------
 usage() {
-
     case $ME in
              isomount)   ;;
               sqmount)   ;;
@@ -137,6 +144,20 @@ usage() {
 
     show_version
     echo
+
+    if [ "$1" == 'all' ]; then
+        DONT_SHOW_OPTS=true
+        iso_mount_usage    ; echo
+        sq_mount_usage     ; echo
+        iso_umount_usage   ; echo
+        sq_umount_usage    ; echo
+        clean_usage        ; echo
+        show_usage         ; echo
+
+        DONT_SHOW_OPTS=
+        opt_usage
+        exit 0
+    fi
 
     case $ME in
              isomount) iso_mount_usage     ;;
@@ -181,7 +202,7 @@ eval_argument() {
     case $arg in
          -color|c)  COLOR_SCHEME=$val   ;;
          -color=*)  COLOR_SCHEME=$val   ;;
-          -help|h)  usage               ;;
+          -help|h)  DO_HELP=true        ;;
          -quiet|q)  ONLY_MPS=true       ;;
          -Quiet|Q)  NO_MPS=true         ;;
         -silent|s)  BE_SILENT=true      ;;
@@ -209,6 +230,8 @@ main() {
           isomount|sqmount)  max_param=1  ; min_param=1 ;;
         isoumount|squmount)  max_param=1                ;;
     esac
+
+    [ "$DO_HELP" ] && usage "$CMD_CMDS"
 
     [ $PARAM_CNT -lt $min_param ] && usage
     [ $PARAM_CNT -gt $max_param ] && fatal "Too many command line parameters"
@@ -649,8 +672,8 @@ read_params() {
 #
 #------------------------------------------------------------------------------
 show_version() {
-    local fmt="%s version %s (%s)\n"
-    printf "$fmt" "$ME" "$VERSION"  "$VERSION_DATE"
+    local fmt="%s %s$num_co %s$nc_co ($date_co%s$nc_co)\n"
+    printf "$fmt" "$ME" "version" "$VERSION"  "$VERSION_DATE"
 }
 
 
