@@ -46,41 +46,45 @@ Usage: **isomount [options] /path/to/file.iso**
 
 Usage: **sqmount [options] /path/to/squashfs-file**
 
-        Mount the squashfs file specified at a directory like /mnt/sq1/
+Mount the squashfs file specified at a directory like /mnt/sq1/
 
-        Also add an entry in the status file like /mnt/sq1@<name> where
-        <name> is the path to the mounted file.
-    --------------------------------------------------------------------
+Also add an entry in the status file like /mnt/sq1@<name> where
+<name> is the path to the mounted file.
+
+--------------------------------------------------------------------
 
 Usage: **isoumount [options] [/mnt/iso2|'all']**
 
-        Umount the most recently mounted iso file.  If a mountpoint is
-        given then unmount that mountpoint instead.  In both cases we also
-        remove the entry from the status file.
+Umount the most recently mounted iso file.  If a mountpoint is
+given then unmount that mountpoint instead.  In both cases we also
+remove the entry from the status file.
 
-        If 'all' is given then we umount all of our mounts and empty
-        the status file.
-    --------------------------------------------------------------------
+If 'all' is given then we umount all of our mounts and empty
+the status file.
+
+-------------------------------------------------------------------
+
 
 Usage: **squmount [options] [/mnt/sq2|'all']**
 
-        Umount the most recently mounted squashfs file.  If a mountpoint is
-        given then unmount that mountpoint instead.  In both cases we also
-        remove the entry from the status file.
+Umount the most recently mounted squashfs file.  If a mountpoint is
+given then unmount that mountpoint instead.  In both cases we also
+remove the entry from the status file.
 
-        If 'all' is given then we umount all of our mounts and empty
-        the status file.
-    --------------------------------------------------------------------
+If 'all' is given then we umount all of our mounts and empty
+the status file.
+
+--------------------------------------------------------------------
 
 Usage: **clean-isomount [options]**
 
-        Clean up leftover mountpoint directories and @ files.
-    --------------------------------------------------------------------
+Clean up leftover mountpoint directories and @ files.
+
+--------------------------------------------------------------------
 
 Usage: **show-isomount [options]**
 
-        Show the currently mounted iso and squashfs files
-    --------------------------------------------------------------------
+Show the currently mounted iso and squashfs files
 
 Options
 -------
