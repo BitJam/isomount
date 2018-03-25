@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "ISOMOUNT 1"
-.TH ISOMOUNT 1 "2018-03-24" "Version 2.0.0" "antiX Documentation"
+.TH ISOMOUNT 1 "2018-03-25" "Version 2.0.0" "antiX Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -155,44 +155,57 @@
 .Ve
 .SH "OPTIONS"
 .IX Header "OPTIONS"
-.Vb 5
+.Vb 7
 \&    \-c \-\-color=<xxx>   set color scheme to off|low|low2|bw|dark|high
 \&    \-h \-\-help          show this usage
+\&    \-q \-\-quiet         only show mountpoints
 \&    \-q \-\-quiet         don\*(Aqt show mountpoint(s)
 \&    \-s \-\-silent        don\*(Aqt print anything except errors
-\&    \-v \-\-verbose       be more verbose
+\&    \-v \-\-version       show version number and exit
+\&    \-V \-\-verbose       be more verbose
 .Ve
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-.IP "isomount" 4
-.IX Item "isomount"
-Mount the iso file specified at a directory like /mnt/iso1/.  If
+.IP "\fIisoumount [options] /path/to/file.iso\fR" 4
+.IX Item "isoumount [options] /path/to/file.iso"
+Mount the iso file specified at a directory like /mnt/iso/iso1.  If
 it is an \s-1MX\s0 or antiX iso then also mount the /antiX/linuxfs file
 as a squashfs file.
 .Sp
-Also create the file /mnt/iso1e@<name> where <name> is the path to
-the mounted file with slashes converted to dashes.
-.IP "sqmount" 4
-.IX Item "sqmount"
-Mount the squashfs file specified at a directory like /mnt/sq1/
+Also add an entry in the status file like /mnt/iso1@<name> where
+<name> is the path to the mounted file.
+.ie n .IP """soumount [options] /path/to/squashfs\-file""" 4
+.el .IP "\f(CWsoumount [options] /path/to/squashfs\-file\fR" 4
+.IX Item "soumount [options] /path/to/squashfs-file"
+Mount the squashfs file specified at a directory like /mnt/iso/sq1/
 .Sp
-Also create the file/mnt/sq1@<name> where <name> is the path to
-the mounted file with slashes converted to dashes.
-.IP "isoumount" 4
-.IX Item "isoumount"
+Also add an entry in the status file like /mnt/sq1@<name> where
+<name> is the path to the mounted file.
+.ie n .IP """isoumount [options] [/mnt/iso/isoN|\*(Aqall\*(Aq]""" 4
+.el .IP "\f(CWisoumount [options] [/mnt/iso/isoN|\*(Aqall\*(Aq]\fR" 4
+.IX Item "isoumount [options] [/mnt/iso/isoN|all]"
 Umount the most recently mounted iso file.  If a mountpoint is
 given then unmount that mountpoint instead.  In both cases we also
-delete the mountpoint directory and the the /mnt/iso2@<name> file.
-.IP "squmount" 4
-.IX Item "squmount"
+remove then entry from the status file.
+.Sp
+If 'all' is given then unmount all of our mounts and all entries
+from the status file.
+.ie n .IP """isoumount [options] [/mnt/iso/sqN|\*(Aqall\*(Aq]""" 4
+.el .IP "\f(CWisoumount [options] [/mnt/iso/sqN|\*(Aqall\*(Aq]\fR" 4
+.IX Item "isoumount [options] [/mnt/iso/sqN|all]"
 Umount the most recently mounted squashfs file.  If a mountpoint is
 given then unmount that mountpoint instead.  In both cases we also
-delete the mountpoint directory and the the /mnt/sq2@<name> file.
-.IP "clean-isomount" 4
-.IX Item "clean-isomount"
+delete the mountpoint directory and the /mnt/iso/sqN@<name> file.
+.Sp
+If 'all' is given then unmount all of our mounts and all entries
+from the status file.
+.ie n .IP """isoumount [options]""" 4
+.el .IP "\f(CWisoumount [options]\fR" 4
+.IX Item "isoumount [options]"
 Clean up leftover mountpoint directories and @ files.
-.IP "show-isomount" 4
-.IX Item "show-isomount"
+.ie n .IP """isoumount [options]""" 4
+.el .IP "\f(CWisoumount [options]\fR" 4
+.IX Item "isoumount [options]"
 Show the currently mounted iso and squashfs files
 .SH "LICENSE"
 .IX Header "LICENSE"
