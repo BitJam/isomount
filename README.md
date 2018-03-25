@@ -4,6 +4,12 @@ Easily mount and unmount iso files and squashfs files
 There is a lot of commonality in the scripts so there is
 only one real script and the others are symlinks to it.
 
+IMPORTANT NOTE
+--------------
+**Starting with version 00.00.20 an incompatible change was made.
+Please make sure all of the mountpoints from the previous
+version are unmounted before you upgrade**
+
 Quick Start
 -----------
 If you clone or copy this repo then you can use the utilities
@@ -104,3 +110,10 @@ If you are not the root user and if you do not call a script that
 needs root privileges with sudo then the script uses "sudo" as
 needed.  If you don't have sudo on you system then just make sure
 you always call them as root.
+
+This started as 36 lines of code that has worked well for me
+for many years. It has now blossomed to over 400 lines of
+code.  A number of my programs are like that.  The start
+with a core of under 50 lines (often much less) and then
+grow by a factor of 10 or more.  That's user friendliness
+for you.
