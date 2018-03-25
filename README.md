@@ -10,6 +10,9 @@ IMPORTANT NOTE
 Please make sure all of the mountpoints from the previous
 version are unmounted before you upgrade**
 
+Also, this is still pre-beta.
+
+
 Quick Start
 -----------
 If you clone or copy this repo then you can use the utilities
