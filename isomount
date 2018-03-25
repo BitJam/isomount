@@ -114,7 +114,8 @@ Options:
     -q --quiet         only show mountpoints
     -q --quiet         don't show mountpoint(s)
     -s --silent        don't print anything except errors
-    -v --verbose       be more verbose
+    -v --version       show version number and exit
+    -V --verbose       be more verbose
 Usage
 }
 
@@ -123,6 +124,20 @@ Usage
 #
 #------------------------------------------------------------------------------
 usage() {
+
+    case $ME in
+             isomount)   ;;
+              sqmount)   ;;
+            isoumount)   ;;
+             squmount)   ;;
+       clean-isomount)   ;;
+        show-isomount)   ;;
+                    *) fatal "Unknown program name %s" $ME ;;
+    esac
+
+    show_version
+    echo
+
     case $ME in
              isomount) iso_mount_usage     ;;
               sqmount) sq_mount_usage      ;;
@@ -132,6 +147,7 @@ usage() {
         show-isomount) show_usage          ;;
                     *) fatal "Unknown program name %s" $ME ;;
     esac
+
 
     exit 0
 }
@@ -163,13 +179,14 @@ assign_parameter() {
 eval_argument() {
     local arg=$1  val=$2
     case $arg in
-         -color|c)  COLOR_SCHEME=$val  ;;
-         -color=*)  COLOR_SCHEME=$val  ;;
-          -help|h)  usage              ;;
-         -quiet|q)  ONLY_MPS=true      ;;
-         -Quiet|Q)  NO_MPS=true      ;;
-        -silent|s)  BE_SILENT=true     ;;
-       -verbose|v)  BE_VERBOSE=true    ;;
+         -color|c)  COLOR_SCHEME=$val   ;;
+         -color=*)  COLOR_SCHEME=$val   ;;
+          -help|h)  usage               ;;
+         -quiet|q)  ONLY_MPS=true       ;;
+         -Quiet|Q)  NO_MPS=true         ;;
+        -silent|s)  BE_SILENT=true      ;;
+       -versino|v)  show_version ; exit ;;
+       -verbose|V)  BE_VERBOSE=true     ;;
                 *)  fatal "Unknown parameter %s" "-$arg"  ;;
     esac
 }
@@ -179,7 +196,7 @@ eval_argument() {
 #
 #------------------------------------------------------------------------------
 main() {
-    local SHIFT SHIFT_2  SHORT_STACK="hQqsv"
+    local SHIFT SHIFT_2  SHORT_STACK="hQqsVv"
     local NO_MPS ONLY_MPS  BE_SILENT BE_VERBOSE  PARAM_CNT
 
     set_colors
@@ -627,7 +644,15 @@ read_params() {
     done
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+show_version() {
+    local fmt="%s version %s (%s)\n"
+    printf "$fmt" "$ME" "$VERSION"  "$VERSION_DATE"
+}
 
-set_colors
+
 
 main "$@"
