@@ -132,15 +132,6 @@ Usage
 #
 #------------------------------------------------------------------------------
 usage() {
-    case $ME in
-             isomount)   ;;
-              sqmount)   ;;
-            isoumount)   ;;
-             squmount)   ;;
-       clean-isomount)   ;;
-        show-isomount)   ;;
-                    *) fatal "Unknown program name %s" $ME ;;
-    esac
 
     show_version
     echo
@@ -231,9 +222,20 @@ main() {
         isoumount|squmount)  max_param=1                ;;
     esac
 
+    case $ME in
+             isomount)   ;;
+              sqmount)   ;;
+            isoumount)   ;;
+             squmount)   ;;
+       clean-isomount)   ;;
+        show-isomount)   ;;
+                    *) fatal "Unknown program name %s" $ME ;;
+    esac
+
     [ "$DO_HELP" ] && usage "$CMD_CMDS"
     [ "$SHOW_VERSION" ] && show_version 'exit'
 
+    [ "$BE_VERBOSE" ] && show_version
     [ $PARAM_CNT -lt $min_param ] && usage
     [ $PARAM_CNT -gt $max_param ] && fatal "Too many command line parameters"
     case $ME in
