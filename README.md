@@ -1,5 +1,5 @@
 # isomount
-Easily mount and unmount iso files and squashfs files
+Easily mount and unmount iso files and squashfs files.
 
 There is a lot of commonality in the scripts so there is
 only one real script and the others are symlinks to it.
@@ -112,7 +112,7 @@ require 4 or 3 letters to be typed before you press <Tab>.
 
 If there is a problem with the symlinks you can get all of the
 functionality by using the ACTION environment variable.  For
-ea ample:
+example:
 
     ACTION=isoumount ./isomount
 
