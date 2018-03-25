@@ -7,12 +7,18 @@ VERSION_DATE="Sat Mar 24 12:31:23 MDT 2018"
 MY_NAME=${0##*/}
 ME=${ACTION:=$MY_NAME}
 
-MAX_DIRS=20
- MNT_DIR="/mnt/iso"
-ISO_NAME="iso"
- SQ_NAME="sq"
- SQ_FILE="antiX/linuxfs"
+ MAX_DIRS=20
 
+  MNT_DIR="/mnt/iso"
+ ISO_NAME="iso"
+  SQ_NAME="sq"
+  SQ_FILE="antiX/linuxfs"
+STAT_FILE="$MNT_DIR/status"
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 SUDO="sudo"
 [ $UID -eq 0 ] && SUDO=
 
@@ -113,27 +119,40 @@ takes_param() {
     esac
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 assign_parameter() {
     local cnt=$1 param=$2
     CMD_CMDS="$CMD_CMDS${CMD_CMDS:+ }$param"
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 eval_argument() {
     local arg=$1  val=$2
     case $arg in
          -color|c)  COLOR_SCHEME=$val  ;;
          -color=*)  COLOR_SCHEME=$val  ;;
           -help|h)  usage              ;;
-         -quiet|q)  BE_QUIET=true      ;;
+         -quiet|q)  ONLY_MPS=true      ;;
+         -Quiet|Q)  NO_MPS=true      ;;
         -silent|s)  BE_SILENT=true     ;;
        -verbose|v)  BE_VERBOSE=true    ;;
                 *)  fatal "Unknown parameter %s" "-$arg"  ;;
     esac
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 main() {
-    local SHIFT SHIFT_2  SHORT_STACK="hqsv"
-    local BE_QUIET  BE_SILENT BE_VERBOSE  PARAM_CNT
+    local SHIFT SHIFT_2  SHORT_STACK="hQqsv"
+    local NO_MPS ONLY_MPS  BE_SILENT BE_VERBOSE  PARAM_CNT
 
     set_colors
     read_all_cmdline_mingled "$@"
@@ -196,20 +215,19 @@ any_mount() {
         $SUDO mkdir -p "$MNT_DIR"
         $SUDO mount -t tmpfs -o size=1m tmpfs "$MNT_DIR"
         mountpoint -q "$MNT_DIR" || fatal "Could not mount %s as %s"  "$MNT_DIR" 'tmpfs'
+        $SUDO touch $STAT_FILE
     fi
-
     for n in $(seq 1 $MAX_DIRS); do
         where=$MNT_DIR/$name$n
         mountpoint -q "$where" || break
     done
     mountpoint -q  "$where" && fatal "Mount point %s and below are already taken" "$where"
 
-    what_lab=$(what_lab "$what")
-    ls $MNT_DIR/ | grep -q "@$what_lab"  && fatal "will not mount %s twice" "$white$what$warn_co"
+    local mp=${where##*/}
 
     $SUDO mkdir -p "$where" || fatal "Could not create the directory %s" "$where"
-    #echo $SUDO mount "$@" "$what" "$where"
     $SUDO mount "$@" "$what" "$where"
+
     if ! mountpoint -q "$where"; then
         $SUDO rmdir "$where"
         fatal "Was unable to mount %s" "$* $what $where"
@@ -217,23 +235,43 @@ any_mount() {
 
     say "Mounted %s at %s" "$hi_co$what$m_co" "$hi_co$where$m_co"
 
-    if [ "$name" == "$SQ_NAME" ]; then
-        $SUDO touch "$where@$(what_lab "$what")"
-    else
-        #$SUDO touch "$where@$(basename "$what")"
-        $SUDO touch "$where@$(what_lab "$what")"
-    fi
+    $SUDO touch $STAT_FILE
+    $SUDO sed -i "/^$mp@/d" $STAT_FILE
+    echo "$mp@$what" | $SUDO tee -a $STAT_FILE > /dev/null
 
     local sq_file=$where/$SQ_FILE
     [ "$name" == "$ISO_NAME" -a -e "$sq_file" ] || return
     sq_mount "$sq_file"
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 any_umount() {
-    verbose "any_umount( %s )" "$bold_co$*$quest_co"
-    local name=$1  where=$2  n
+    verbose "any_umount(%s)" "$bold_co$*$quest_co"
+    local name=$1  where=$2
+    if [ "$where" == 'all' ]; then
+        local mp i is_done
+        for i in $(seq 1 1); do
+            is_done=true
+            for mp in $(df -a | awk '{print $6 }' | grep "^$MNT_DIR/" | tac); do
+                mountpoint -q $mp || continue
+                $SUDO umount $mp
 
-    if [ -n "$where" ]; then
+                if mountpoint -q $mp; then
+                    is_done=
+                else
+                    say "Unmounted %s" "$hi_co$mp$m_co"
+	                $SUDO sed -i "/^${mp##*/}@/d" $STAT_FILE
+                fi
+            done
+            [ "$is_done" ] && break
+        done
+        show_mounts
+        return
+
+    elif [ -n "$where" ]; then
         mountpoint -q "$where" || fatal "%s is not a mountpoint" "$where"
         name=${where##*/}
         name=${name%%[0-9]*}
@@ -241,21 +279,23 @@ any_umount() {
             $ISO_NAME|$SQ_NAME) ;;
             *) fatal "Unrecognized name %s" "$name" ;;
         esac
+
     else
+        local n
         for n in $(seq $MAX_DIRS -1 1); do
             where=$MNT_DIR/$name$n
             mountpoint -q "$where" && break
         done
         mountpoint -q "$where" || fatal "No %s mountpoints found" "$name"
+
     fi
     local sq_file=$where/$SQ_FILE
-    local sq_lab=$(what_lab "$sq_file")
 
     if [ "$name" == "$ISO_NAME" -a -e "$sq_file" ]; then
-        for n in $(seq $MAX_DIRS -1 1); do
-            local pointer=$MNT_DIR/$SQ_NAME$n@$sq_lab
-            test -e $pointer || continue
-            local sq_mp=${pointer%%@*}
+
+        local pointer sq_mp
+        for pointer in $(grep -E "^sq[0-9]+@$sq_file$" $STAT_FILE 2>/dev/null); do
+            sq_mp=$MNT_DIR/${pointer%%@*}
             mountpoint -q "$sq_mp" && do_umount "$sq_mp"
         done
     fi
@@ -263,69 +303,124 @@ any_umount() {
     do_umount "$where"
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 do_umount() {
+    verbose "do_umount(%s)" "$bold_co$*$quest_co"
     local where=$1
 	$SUDO umount  "$where"
 	mountpoint -q "$where" && fatal "Failed to umount %s" "$where"
 	$SUDO rmdir   "$where" || fatal "Failed to remove %s directory" "$where"
 
-
-    local pointer=$(ls $where@*)
-
-    if [ $(ls -a $pointer | wc -l) -eq 1 ] && test -e "$pointer"; then
-         local what=/$(echo "${pointer#*@}" | tr - /)
+    local mp=${where##*/}
+    local what=$(sed "s/$mp@//" $STAT_FILE)
+    if [ -z "$what" ]; then
         say "Unmounted %s (%s)" "$hi_co$where$m_co" "$hi_co$what$m_co"
     else
         say "Unmounted %s" "$hi_co$where$m_co"
     fi
 
-	$SUDO rm -f "$where@"*
+    local mp=${where##*/}
+	$SUDO sed -i "/^$mp@/d" $STAT_FILE
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 fatal() {
     local fmt=$1 ; shift
     printf "$ME: $warn_co$fmt$nc_co\n" "$@" >&2
     exit 2
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 say() {
-    [ "$BE_SILENT" ] && return
+    [ "$BE_SILENT$ONLY_MPS" ] && return
     local fmt=$1 ; shift
     printf "$ME: $m_co$fmt$nc_co\n" "$@"
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 verbose() {
     [ "$BE_VERBOSE" ] || return
     local fmt=$1 ; shift
     printf "$ME: $quest_co$fmt$nc_co\n" "$@"
 }
 
-
-what_lab() {
-    local what=$(echo "$1" | tr / -)
-    echo "${what#-}"
-}
-
+#------------------------------------------------------------------------------
+# Show the mount points we have created together with the file that is mounted
+# and type and size. We go through the list of mount points twice.  The first
+# time we get the maximum width so everything lines up nice and neat.
+#
+# I should truncate the file names if we don't fit the screen and I should
+# add colors.
+#------------------------------------------------------------------------------
 show_mounts() {
-    local data=$(df -hT | grep -E " $MNT_DIR/($ISO_NAME|$SQ_NAME)[0-9]")
+    local data=$(df -ahT | grep -E " $MNT_DIR/($ISO_NAME|$SQ_NAME)[0-9]")
     [ -z "$data" ] && return
+
+    local w_file=$(sed "s/^[^@]*@//" $STAT_FILE | awk '{print length}' | sort -r | head -n1)
+
+    local dev type size used avail percent mp file
+    local w_type=0 w_size=0 w_mp=0
+    while read dev type size used avail percent mp; do
+        [ ${#dev} -gt 0   ] || continue
+        [ $w_type -lt ${#type} ] && w_type=${#type}
+        [ $w_size -lt ${#size} ] && w_size=${#size}
+        [ $w_mp -lt ${#mp} ] && w_mp=${#mp}
+    done <<Show_Mounts
+$(echo "$data")
+Show_Mounts
+
     echo
-    echo "$data"
+    local hfmt="$head_co%-${w_file}s  %-${w_type}s  %${w_size}s  %-${w_mp}s$nc_co\n"
+    printf "$hfmt" 'File' 'Type' 'Size' 'Mount Point'
+
+    local fmt="$dev_co%-${w_file}s  $warn_co%-${w_type}s  $num_co%${w_size}s  $m_co%-${w_mp}s$nc_co\n"
+
+    while read dev type size used avail percent mp; do
+        file=$(sed -n "s|${mp##*/}@||p" $STAT_FILE | head -n1)
+        [ ${#dev} -gt 0   ] || continue
+        printf "$fmt" "$file" "$type" "$size" "$mp"
+    done <<Show_Mounts
+$(echo "$data")
+Show_Mounts
+    [ -n "$BE_VERBOSE" -a -e "$STAT_FILE" ] || return
+    echo
+    cat $STAT_FILE
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 clean_mounts() {
-    local name what n
+    local name what n mp
     for name in $ISO_NAME $SQ_NAME; do
         for n in $(seq 1 $MAX_DIRS); do
             what=$MNT_DIR/$name$n
+            mountpoint -q "$what" && echo "save: $what"
             mountpoint -q "$what" && continue
-            test -d "$what" && $SUDO rmdir  "$what"
-            $SUDO rm -f "$what"@*
+            test -d "$what" && $SUDO rmdir "$what"
+            mp=${what##*/}
+            test -e $STAT_FILE && $SUDO sed -i "/^$mp@/d" $STAT_FILE
         done
     done
-
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 set_colors() {
     local color=${1:-high}
 
