@@ -10,7 +10,7 @@ IMPORTANT NOTE
 Please make sure all of the mountpoints from the previous
 version are unmounted before you upgrade**
 
-Also, this is still pre-beta.
+Also, this is very early beta.
 
 Screen Shots
 ------------
