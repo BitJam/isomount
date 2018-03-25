@@ -36,6 +36,10 @@ Usage
     opt_usage
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 sq_mount_usage() {
     local fname=$MNT_DIR/${SQ_NAME}1
     cat <<Usage
@@ -48,6 +52,10 @@ Usage
     opt_usage
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 iso_umount_usage() {
     local fname=$MNT_DIR/${ISO_NAME}N
     cat <<Usage
@@ -59,6 +67,10 @@ Usage
     opt_usage
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 sq_umount_usage() {
     local fname=$MNT_DIR/${SQ_NAME}N
     cat <<Usage
@@ -70,6 +82,10 @@ Usage
     opt_usage
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 clean_usage() {
     cat <<Usage
 Usage: $ME [options]
@@ -78,6 +94,10 @@ Usage
     opt_usage
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 show_usage() {
     cat <<Usage
 Usage: $ME [options]
@@ -92,12 +112,17 @@ opt_usage() {
 Options:
     -c --color=<xxx>   set color scheme to off|low|low2|bw|dark|high
     -h --help          show this usage
+    -q --quiet         only show mountpoints
     -q --quiet         don't show mountpoint(s)
     -s --silent        don't print anything except errors
     -v --verbose       be more verbose
 Usage
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 usage() {
     case $ME in
              isomount) iso_mount_usage     ;;
@@ -112,6 +137,10 @@ usage() {
     exit 0
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 takes_param() {
     case $1 in
         -color|c) return 0 ;;
@@ -170,41 +199,62 @@ main() {
     case $ME in
              isomount)  iso_mount    "$CMD_CMDS"       ;;
               sqmount)  sq_mount     "$CMD_CMDS"       ;;
-             squmount)  iso_umount   "$@"              ;;
-            isoumount)  iso_umount   "$@"              ;;
+            isoumount)  iso_umount   "$CMD_CMDS"       ;;
+             squmount)  sq_umount    "$CMD_CMDS"       ;;
        clean-isomount)  clean_mounts                   ;;
-        show-isomount)  show_mounts ; exit 0          ;;
+        show-isomount)  show_mounts ; exit 0           ;;
                     *)  fatal "Unknown program name %s" $ME ;;
     esac
 
-    [ -z "$BE_SILENT$BE_QUIET" ] && show_mounts
+    [ -z "$BE_SILENT$NO_MPS" ] && show_mounts
     exit 0
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 iso_mount() {
     local what=$1
     any_mount "$ISO_NAME" "$what" -o loop,user,ro,exec -t iso9660
 
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 sq_mount() {
     local what=$1
     any_mount "$SQ_NAME" "$what"  -o loop,user,ro,exec -t squashfs
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 iso_umount() {
-    local where=$1  name=$ISO_NAME
+    local name=$ISO_NAME  where=$1
     any_umount "$name" $where
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 sq_umount() {
-    local where=$1  name=$SQ_NAME
+    local name=$SQ_NAME  Ewhere=$1
     any_umount "$name" $where
 }
 
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 any_mount() {
-    verbose "any_mount( %s )" "$bold_co$*$quest_co"
+    verbose "any_mount(%s)" "$bold_co$*$quest_co"
+
     local name=$1  what=$2    where  n; shift 2
     [ -z "$what" ]  && fatal "Need to say what we should %s"   "$ME"
 
@@ -498,6 +548,10 @@ set_colors() {
 }
 
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 read_all_cmdline_mingled() {
 
     : ${PARAM_CNT:=0}
@@ -517,12 +571,20 @@ read_all_cmdline_mingled() {
     done
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 check_param_cnt() {
     local max=$1 ; shift
     [ $# -le $max ] && return
     fatal "Unexpected command line parameter(s): %s" "$*"
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 read_params() {
     # Most of this code is boiler-plate for parsing cmdline args
     SHIFT=0
