@@ -12,6 +12,22 @@ version are unmounted before you upgrade**
 
 Also, this is very early beta.
 
+TLDR:
+-----
+
+Mount an iso file (and its linuxfs file if it is antiX/MX):
+    isomount /path/to/iso-file.iso
+
+Unmount the most recently mounted iso file (and its linuxfs file if needed):
+    isoumount
+
+Unmount all the files we have mounted:
+    isoumount all
+
+Show what files are mounted:
+    show-isoumount
+
+
 Screen Shots
 ------------
 ### Mounting
