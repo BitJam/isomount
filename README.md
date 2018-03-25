@@ -6,7 +6,7 @@ only one real script and the others are symlinks to it.
 
 IMPORTANT NOTE
 --------------
-**Starting with version 00.00.20 an incompatible change was made.
+**Starting with version 00.02.00 an incompatible change was made.
 Please make sure all of the mountpoints from the previous
 version are unmounted before you upgrade**
 
