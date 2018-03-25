@@ -206,7 +206,7 @@ eval_argument() {
          -quiet|q)  ONLY_MPS=true       ;;
          -Quiet|Q)  NO_MPS=true         ;;
         -silent|s)  BE_SILENT=true      ;;
-       -versino|v)  show_version ; exit ;;
+       -version|v)  SHOW_VERSION=true   ;;
        -verbose|V)  BE_VERBOSE=true     ;;
                 *)  fatal "Unknown parameter %s" "-$arg"  ;;
     esac
@@ -232,6 +232,10 @@ main() {
     esac
 
     [ "$DO_HELP" ] && usage "$CMD_CMDS"
+    if [ "$SHOW_VERSION" ]; then
+        show_version
+        exit 0
+    fi
 
     [ $PARAM_CNT -lt $min_param ] && usage
     [ $PARAM_CNT -gt $max_param ] && fatal "Too many command line parameters"
