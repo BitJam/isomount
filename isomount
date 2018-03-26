@@ -466,7 +466,7 @@ show_mounts() {
     local lab_mp="Mounted at"
 
     local w_file=$(sed -n "s/^[^@]*@//p" $STAT_FILE | awk '{print length}' | sort -r | head -n1)
-    [ $w_file -lt ${#lab_file} ] && wfile=${#w_file}
+    [ $w_file -lt ${#lab_file} ] && w_file=${#lab_file}
 
     local dev type size used avail percent mp file
     local w_type=${#lab_type}  w_size=${#lab_size}  w_mp=${#lab_mp}
