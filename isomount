@@ -347,7 +347,7 @@ any_umount() {
         local mp i is_done
         for i in $(seq 1 1); do
             is_done=true
-            for mp in $(df -a | awk '{print $6 }' | grep "^$MNT_DIR/" | tac); do
+            for mp in $(df -a | sed "s/.* //" | grep "^$MNT_DIR/" | tac); do
                 mountpoint -q $mp || continue
                 $SUDO umount $mp
 
