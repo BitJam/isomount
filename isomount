@@ -602,11 +602,11 @@ set_colors() {
          return
      fi
 
-         black="$e[30m"   ;    blue="$e[34m"   ;    green="$e[32m"   ;    cyan="$e[36m"   ;
-           red="$e[31m"   ;  purple="$e[35m"   ;    brown="$e[33m"   ; lt_gray="$e[37m"   ;
-       dk_gray="$e[1;30m" ; lt_blue="$e[1;34m" ; lt_green="$e[1;32m" ; lt_cyan="$e[1;36m" ;
-        lt_red="$e[1;31m" ; magenta="$e[1;35m" ;   yellow="$e[1;33m" ;   white="$e[1;37m" ;
-         nc_co="$e[0m"    ;   brown="$e[33m"   ;   rev_co="$e[7m"    ;    gray="$e[37m"
+         black="$e[0;30m"   ;    blue="$e[0;34m"     ;    green="$e[0;32m"   ;    cyan="$e[0;36m"   ;
+           red="$e[0;31m"   ;  purple="$e[0;35m"     ;    brown="$e[0;33m"   ; lt_gray="$e[0;37m"   ;
+       dk_gray="$e[1;30m"   ; lt_blue="$e[1;34m"     ; lt_green="$e[1;32m"   ; lt_cyan="$e[1;36m"   ;
+        lt_red="$e[1;31m"   ; magenta="$e[1;35m"     ;   yellow="$e[1;33m"   ;   white="$e[1;37m"   ;
+         nc_co="$e[0m"      ;   brown="$e[0;33m"     ;   rev_co="$e[7m"      ;    gray="$e[37m"     ;
 
     case $color in
         high)
