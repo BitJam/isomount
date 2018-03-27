@@ -1,0 +1,440 @@
+#!/bin/bash
+
+
+#------------------------------------------------------------------------------
+# Program: dfh
+#
+# A fancy version of dfh.
+#------------------------------------------------------------------------------
+
+VERSION="00.00.02"
+VERSION_DATE="Sun Mar 25 19:42:23 MDT 2018"
+
+ME=${0##*/}
+
+EXCLUDE_FS_TYPES="tmpfs devtmpfs rootfs proc devpts sysfs mqueue securityfs debugfs
+                 fusectl pstore cgroup binfmt_misc hugetlbfs"
+MIN_DEV_WIDTH=12
+
+usage() {
+
+    show_version
+    printf "\n"
+
+cat << Usage
+${bold_co}Usage:${m_co} $ME [options]${nc_co}
+
+List the "interesting" mounted file systems.
+
+${bold_co}Options:$nc_co
+    $m_co-c --color=<xxx>  $nc_co set color scheme to off|low|low2|bw|dark|high
+    $m_co-h --help         $nc_co show this usage
+    $m_co-q --quiet        $nc_co only show mountpoints
+    $m_co-q --quiet        $nc_co don't show mountpoint(s)
+    $m_co-s --silent       $nc_co don't print anything except errors
+    $m_co-v --version      $nc_co show version number and exit
+    $m_co-V --verbose      $nc_co be more verbose
+
+Usage
+    exit 0
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+takes_param() {
+    case $1 in
+        -color|c) return 0 ;;
+               *) return 1 ;;
+    esac
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+assign_parameter() {
+    local cnt=$1 param=$2
+    CMD_CMDS="$CMD_CMDS${CMD_CMDS:+ }$param"
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+eval_argument() {
+    local arg=$1  val=$2
+    case $arg in
+         -color|c)  COLOR_SCHEME=$val   ;;
+         -color=*)  COLOR_SCHEME=$val   ;;
+          -help|h)  usage               ;;
+         -quiet|q)  ONLY_MPS=true       ;;
+         -Quiet|Q)  NO_MPS=true         ;;
+        -silent|s)  BE_SILENT=true      ;;
+       -version|v)  SHOW_VERSION=true   ;;
+       -verbose|V)  BE_VERBOSE=true     ;;
+                *)  fatal "Unknown parameter %s" "-$arg"  ;;
+    esac
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+main() {
+    local SHIFT SHIFT_2  SHORT_STACK="hQqsVv"
+    local NO_MPS ONLY_MPS  BE_SILENT BE_VERBOSE  PARAM_CNT
+
+    set_colors
+    read_all_cmdline_mingled "$@"
+    shift $SHIFT_2
+    set_colors $COLOR_SCHEME
+
+    [ "$DO_HELP" ] && usage "$CMD_CMDS"
+    [ "$SHOW_VERSION" ] && show_version 'exit'
+
+    [ "$BE_VERBOSE" ] && show_version
+    do_dfh
+
+    exit 0
+}
+
+#------------------------------------------------------------------------------
+# This is the main event
+#------------------------------------------------------------------------------
+do_dfh() {
+
+    local exclude_list=$(echo $EXCLUDE_FS_TYPES | sed -r "s/\s+/ -x /g")
+
+    local data=$(df -ahT -x $exclude_list)
+
+    #echo "$data"
+    #echo
+
+    local lab_dev="File/Device"
+    local lab_type="Type"
+    local lab_size="Size"
+    local lab_used="Used"
+    local lab_avail="Avail"
+    local lab_cent="Use%"
+    local lab_mp="Mounted on"
+    local w_dev=$(losetup --list --noheadings -O back-file |  awk '{print length}' | sort -r  | head -n1)
+    [ ${w_dev:-0} -lt ${#lab_dev} ] && w_dev=${#lab_dev}
+
+    # Find max width of all the fields
+    local dev type size used avail cent mp
+    local w_type=${#lab_type}  w_size=${#lab_size} w_used=${#lab_used} w_avail=${#lab_avail} w_cent=${#lab_cent} w_mp=${#lab_mp}
+    while read dev type size used avail cent mp; do
+        [ ${#dev}  -gt 0         ] || continue
+        [ $w_dev   -lt ${#dev}   ] && w_dev=${#dev}
+        [ $w_type  -lt ${#type}  ] && w_type=${#type}
+        [ $w_size  -lt ${#size}  ] && w_size=${#size}
+        [ $w_used  -lt ${#used}  ] && w_used=${#used}
+        [ $w_avail -lt ${#avail} ] && w_avail=${#avail}
+        [ $w_cent  -lt ${#cent}  ] && w_cent=${#cent}
+        [ $w_mp    -lt ${#mp}    ] && w_mp=${#mp}
+    done <<Dfh_Loop1
+$(echo "$data" | tail -n+2)
+Dfh_Loop1
+
+
+    local w_screen=$(stty size | cut -d" " -f2)
+    local truncate=$((w_dev + w_type + w_size + w_used + w_avail + w_cent + w_mp - w_screen + 12))
+    if [ $truncate -gt 0 ]; then
+        w_dev=$((w_dev - truncate))
+        [ $w_dev -lt $MIN_DEV_WIDTH ] && fatal "The screen appears to be way too narrow!"
+    fi
+
+    local h_co=$head_co$rev_co hfmt hfmt1 hfmt1
+    local h1=
+    case $HEADER_TYPE in normal) h_co=$head_co  ;; esac
+
+    hfmt1="$h_co%-${w_dev}s  %-${w_type}s  %${w_size}s  %${w_used}s  %${w_avail}s  %${w_cent}s  %-${w_mp}s$nc_co\n"
+    hfmt2="$h_co%-${w_dev}s$nc_co  $h_co%-${w_type}s$nc_co  $h_co%${w_size}s$nc_co  $h_co%${w_used}s$nc_co  $h_co%${w_avail}s$nc_co  $h_co%${w_cent}s$nc_co  $h_co%-${w_mp}s$nc_co\n"
+
+    hfmt=$hfmt1 
+    case $HEADER_TYPE in
+          rev2) hfmt=$hfmt2 ;;
+    esac
+
+    if [ "$HEADER_TYPE" == rev3 ]; then
+
+        printf "$h_co%s  "   "$(rpad $w_dev   "$lab_dev$nc_co"   )"
+        printf "$h_co%s  "   "$(rpad $w_type  "$lab_type$nc_co"  )"
+        printf "$h_co%s  "   "$(lpad $w_size  "$lab_size$nc_co"  )"
+        printf "$h_co%s  "   "$(lpad $w_used  "$lab_used$nc_co"  )"
+        printf "$h_co%s  "   "$(lpad $w_avail "$lab_avail$nc_co" )"
+        printf "$h_co%s  "   "$(rpad $w_cent  "$lab_cent$nc_co"  )"
+        printf "$h_co%s\n"   "$lab_mp$nc_co"
+    else
+        printf "$hfmt" "$lab_dev"  "$lab_type" "$lab_size" "$lab_used" "$lab_avail" "$lab_cent" "$lab_mp"
+    fi
+
+    while read dev type size used avail cent mp; do
+        [ ${#dev} -gt 0   ] || continue
+        local type_co=$warn_co
+        if echo "$dev" | grep -q "^/dev/loop[0-9]" ; then
+            used=-
+            avail=-
+            cent=-
+            local file=$(losetup --list --noheadings -O name,back-file | grep "^$dev " | sed -r "s/^[^ ]+ +//")
+            [ -n "$file" ] && dev=$file
+
+            case $type in
+                  iso9660) type_co=$purple    ;;
+                 squashfs) type_co=$quest_co ;;
+                     udf)  type_co=$quit_co  ;;
+            esac
+        fi
+        dev=$(my_truncate "$w_dev" "$dev")
+
+        local fmt="$m_co%-${w_dev}s  $type_co%-${w_type}s  $num_co%${w_size}s$nc_co  %${w_used}s  %${w_avail}s  %${w_cent}s  $m_co%-s$nc_co\n"
+        printf "$fmt" "$dev" "$type" "$size" "$used" "$avail" "$cent" "$mp"
+    done <<Dfh_Loop2
+$(echo "$data" | tail -n+2)
+Dfh_Loop2
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+my_truncate() {
+    local max=$1  str=$2  len=${#2}
+    if [ $len -le $max ]; then
+        printf "%s\n" "$str"
+        return
+    fi
+
+    local offset=$(( len - max + 3))
+    printf "%s\n" "...${str:$offset:$len}"
+}
+
+lpad() {
+    local width=$1  str=$2
+    local len=$(echo $str | sed -r 's/\x1B\[[0-9;]+[mKC]//g' | wc -m)
+    if [ $len -ge $width ]; then
+        printf "%s" "$str"
+        return
+    fi
+
+    printf "%$((width - len + 1))s%s" "" "$str"
+}
+
+rpad() {
+    local width=$1  str=$2
+    local len=$(echo $str | sed -r 's/\x1B\[[0-9;]+[mKC]//g' | wc -m)
+    if [ $len -ge $width ]; then
+        printf "%s" "$str"
+        return
+    fi
+
+    printf "%s%$((width - len + 1))s" "$str" ""
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+fatal() {
+    local fmt=$1 ; shift
+    printf "$ME: $warn_co$fmt$nc_co\n" "$@" >&2
+    exit 2
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+say() {
+    [ "$BE_SILENT$ONLY_MPS" ] && return
+    local fmt=$1 ; shift
+    printf "$ME: $m_co$fmt$nc_co\n" "$@"
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+verbose() {
+    [ "$BE_VERBOSE" ] || return
+    local fmt=$1 ; shift
+    printf "$ME: $quest_co$fmt$nc_co\n" "$@"
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+set_colors() {
+    local color=${1:-high}
+
+    local e=$(printf "\e")
+
+    rev_co="$e[7m" ; nc_co="$e[0m"
+
+    if [ "$color" = 'off' ]; then
+
+         black=  ;    blue=  ;    green=  ;    cyan=  ;
+           red=  ;  purple=  ;    brown=  ; lt_gray=  ;
+       dk_gray=  ; lt_blue=  ; lt_green=  ; lt_cyan=  ;
+        lt_red=  ; magenta=  ;   yellow=  ;   white=  ;
+         brown=  ;
+
+         inst_co=            ;  mark_co=           ;     grep_co=
+         bold_co=            ;    fs_co=           ;      num_co=            ;
+         date_co=            ;  head_co=           ;    quest_co=            ;
+          dev_co=            ;    hi_co=           ;     quit_co=            ;
+          err_co=            ;   lab_co=           ;  version_co=            ;
+        fname_co=            ;     m_co=           ;     warn_co=            ;
+         return
+     fi
+
+         black="$e[0;30m"   ;    blue="$e[0;34m"   ;    green="$e[0;32m"   ;    cyan="$e[0;36m"   ;
+           red="$e[0;31m"   ;  purple="$e[0;35m"   ;    brown="$e[0;33m"   ; lt_gray="$e[0;37m"   ;
+       dk_gray="$e[1;30m"   ; lt_blue="$e[1;34m"   ; lt_green="$e[1;32m"   ; lt_cyan="$e[1;36m"   ;
+        lt_red="$e[1;31m"   ; magenta="$e[1;35m"   ;   yellow="$e[1;33m"   ;   white="$e[1;37m"   ;
+         nc_co="$e[0m"      ;   brown="$e[0;33m"   ;   rev_co="$e[7m"      ;    gray="$e[37m"     ;
+
+    case $color in
+        high)
+         inst_co=$lt_cyan    ;  mark_co=$rev_co    ;     grep_co="1;35"
+         bold_co=$yellow     ;    fs_co=$lt_blue   ;      num_co=$magenta    ;
+         date_co=$lt_cyan    ;  head_co=$white     ;    quest_co=$lt_green   ;
+          dev_co=$white      ;    hi_co=$white     ;     quit_co=$yellow     ;
+          err_co=$red        ;   lab_co=$lt_cyan   ;  version_co=$white      ;
+        fname_co=$white      ;     m_co=$lt_cyan   ;     warn_co=$yellow     ; ;;
+
+        dark)
+         inst_co=$cyan       ;  mark_co=$rev_co    ;     grep_co="1;34"
+         bold_co=$brown      ;    fs_co=$lt_blue   ;      num_co=$brown   ;
+         date_co=$cyan       ;  head_co=$gray      ;   quest_co=$green    ;
+          dev_co=$gray       ;    hi_co=$gray      ;    quit_co=$brown    ;
+          err_co=$red        ;   lab_co=$cyan      ;  version_co=$gray    ;
+        fname_co=$gray       ;     m_co=$cyan      ;     warn_co=$brown   ; ;;
+
+        low)
+         inst_co=$cyan       ;  mark_co=$rev_co    ;     grep_co="1;34"
+         bold_co=$white      ;    fs_co=$gray      ;      num_co=$white      ;
+         date_co=$gray       ;  head_co=$white     ;    quest_co=$lt_green   ;
+          dev_co=$white      ;    hi_co=$white     ;     quit_co=$lt_green   ;
+          err_co=$red        ;   lab_co=$gray      ;  version_co=$white      ;
+        fname_co=$white      ;     m_co=$gray      ;     warn_co=$brown      ; ;;
+
+        low2)
+         inst_co=$cyan       ;  mark_co=$rev_co    ;     grep_co="1"
+         bold_co=$white      ;    fs_co=$gray      ;      num_co=$white      ;
+         date_co=$gray       ;  head_co=$white     ;    quest_co=$green      ;
+          dev_co=$white      ;    hi_co=$white     ;     quit_co=$green      ;
+          err_co=$red        ;   lab_co=$gray      ;  version_co=$white      ;
+        fname_co=$white      ;     m_co=$gray      ;     warn_co=$brown      ; ;;
+
+        bw)
+         inst_co=$white      ;  mark_co=$rev_co    ;     grep_co="1;37"
+         bold_co=$white      ;    fs_co=$gray      ;      num_co=$white      ;
+         date_co=$gray       ;  head_co=$white     ;    quest_co=$white      ;
+          dev_co=$white      ;    hi_co=$white     ;     quit_co=$white      ;
+          err_co=$white      ;   lab_co=$lt_gray   ;  version_co=$lt_gray    ;
+        fname_co=$white      ;     m_co=$gray      ;     warn_co=$white      ; ;;
+
+        *)
+            fatal "Unknown color parameter: %s" "$color"
+    esac
+}
+
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+read_all_cmdline_mingled() {
+
+    : ${PARAM_CNT:=0}
+    SHIFT_2=0
+
+    while [ $# -gt 0 ]; do
+        read_params "$@"
+        shift $SHIFT
+        SHIFT_2=$((SHIFT_2 + SHIFT))
+        [ -n "$END_CMDLINE" ] && return
+        while [ $# -gt 0 -a ${#1} -gt 0 -a -n "${1##-*}" ]; do
+            PARAM_CNT=$((PARAM_CNT + 1))
+            assign_parameter $PARAM_CNT "$1"
+            shift
+            SHIFT_2=$((SHIFT_2 + 1))
+        done
+    done
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+check_param_cnt() {
+    local max=$1 ; shift
+    [ $# -le $max ] && return
+    fatal "Unexpected command line parameter(s): %s" "$*"
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+read_params() {
+    # Most of this code is boiler-plate for parsing cmdline args
+    SHIFT=0
+    # These are the single-char options that can stack
+
+    local arg val
+
+    # Loop through the cmdline args
+    while [ $# -gt 0 -a ${#1} -gt 0 -a -z "${1##-*}" ]; do
+        arg=${1#-} ; shift
+        SHIFT=$((SHIFT + 1))
+
+        # Expand stacked single-char arguments
+        case $arg in
+            [$SHORT_STACK][$SHORT_STACK]*)
+                if echo "$arg" | grep -q "^[$SHORT_STACK]\+$"; then
+                    local old_cnt=$#
+                    set -- $(echo $arg | sed -r 's/([a-zA-Z])/ -\1 /g') "$@"
+                    SHIFT=$((SHIFT - $# + old_cnt))
+                    continue
+                fi;;
+        esac
+
+        # Deal with all options that take a parameter
+        if takes_param "$arg"; then
+            [ $# -lt 1 ] && fatal $"Expected a parameter after: %s" "-$arg"
+            val=$1
+            [ -n "$val" -a -z "${val##-*}" ] \
+                && fatal $"Suspicious argument after %s: %s" "-$arg" "$val"
+            SHIFT=$((SHIFT + 1))
+            shift
+        else
+            case $arg in
+                *=*)  val=${arg#*=} ;;
+                  *)  val="???"     ;;
+            esac
+        fi
+
+        eval_argument "$arg" "$val"
+        [ "$END_CMDLINE" ] && return
+    done
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+show_version() {
+    local fmt="%s %s$num_co %s$nc_co ($date_co%s$nc_co)\n"
+    printf "$fmt" "$ME" "version" "$VERSION"  "$VERSION_DATE"
+
+    [ $# -gt 0 ]  && exit 0
+}
+
+
+
+main "$@"
