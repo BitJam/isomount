@@ -478,7 +478,13 @@ $(echo "$data")
 Show_Mounts
 
 
-    local w_screen=$(stty size | cut -d" " -f2)
+    local w_screen=$(stty size | cut -d" " -f2)  clip_mp
+    if [ $w_screen -lt $((w_file + w_type + w_size + w_mp + 6)) ]; then
+        clip_mp=true
+        lab_mp="MntPnt"
+        w_mp=$((w_mp - ${#MNT_DIR} -1))
+        [ $w_mp -lt ${#w_lab} ] && w_mp=${w_mp}
+    fi
     local truncate=$((w_file + w_type + w_size + w_mp - w_screen + 6))
     if [ $truncate -gt 0 ]; then
         w_file=$((w_file - truncate))
@@ -487,14 +493,14 @@ Show_Mounts
 
     printf "\n"
     local hfmt="$head_co$rev_co%-${w_file}s  %-${w_type}s  %${w_size}s  %-${w_mp}s$nc_co\n"
-    printf "$hfmt" 'File' 'Type' 'Size' 'Mount Point'
+    printf "$hfmt" "$lab_file" "$lab_type" "$lab_size" "$lab_mp"
 
     local fmt="$dev_co%-${w_file}s  $warn_co%-${w_type}s  $num_co%${w_size}s  $m_co%-${w_mp}s$nc_co\n"
 
     while read dev type size used avail percent mp; do
         [ ${#dev} -gt 0   ] || continue
         file=$(loop_to_file $dev)
-
+        [ "$clip_mp" ] && mp=${mp#$MNT_DIR/}
         file=$(my_truncate "$w_file" "$file")
         printf "$fmt" "$file" "$type" "$size" "$mp"
     done <<Show_Mounts
