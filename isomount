@@ -486,7 +486,7 @@ Show_Mounts
     fi
 
     printf "\n"
-    local hfmt="$head_co%-${w_file}s  %-${w_type}s  %${w_size}s  %-${w_mp}s$nc_co\n"
+    local hfmt="$head_co$rev_co%-${w_file}s  %-${w_type}s  %${w_size}s  %-${w_mp}s$nc_co\n"
     printf "$hfmt" 'File' 'Type' 'Size' 'Mount Point'
 
     local fmt="$dev_co%-${w_file}s  $warn_co%-${w_type}s  $num_co%${w_size}s  $m_co%-${w_mp}s$nc_co\n"
