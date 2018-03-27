@@ -464,13 +464,12 @@ show_mounts() {
     local lab_size="Size"
     local lab_mp="Mounted at"
 
-    local w_file=$(losetup -nl -O back-file | awk '{print length}' | sort -r  | head -n1 )
-    #[ $w_file -lt ${#lab_file} ] && w_file=${#lab_file}
-
     local dev type size used avail percent mp file
-    local w_type=${#lab_type}  w_size=${#lab_size}  w_mp=${#lab_mp}
+    local w_type=${#lab_type}  w_size=${#lab_size}  w_mp=${#lab_mp} w_file=${#lab_file}
     while read dev type size used avail percent mp; do
         [ ${#dev} -gt 0   ] || continue
+        local file=$(loop_to_file $dev)
+        [ $w_file -lt ${#file} ] && w_file=${#file}
         [ $w_type -lt ${#type} ] && w_type=${#type}
         [ $w_size -lt ${#size} ] && w_size=${#size}
         [ $w_mp -lt ${#mp} ] && w_mp=${#mp}
