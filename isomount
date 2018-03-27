@@ -119,8 +119,8 @@ ${bold_co}Options:$nc_co
     $m_co-c --color=<xxx>  $nc_co set color scheme to off|low|low2|bw|dark|high
     $m_co-h --help         $nc_co show this usage
     $m_co-q --quiet        $nc_co only show mountpoints
-    $m_co-q --quiet        $nc_co don't show mountpoint(s)
-    $m_co-s --silent       $nc_co don't print anything except errors
+    $m_co-Q --Quiet        $nc_co don't show mountpoint(s)
+    $m_co-s --silent       $nc_co don't print error message
     $m_co-v --version      $nc_co show version number and exit
     $m_co-V --verbose      $nc_co be more verbose
 Usage
@@ -247,7 +247,7 @@ main() {
                     *)  fatal "Unknown program name %s" $ME ;;
     esac
 
-    [ -z "$BE_SILENT$NO_MPS" ] && show_mounts
+    [ -z "$NO_MPS" ] && show_mounts
     exit 0
 }
 
@@ -396,21 +396,27 @@ any_umount() {
 do_umount() {
     verbose "do_umount(%s)" "$bold_co$*$quest_co"
     local where=$1
+    local what=$(mp_to_file $where)
 	$SUDO umount  "$where"
 	mountpoint -q "$where" && fatal "Failed to umount %s" "$where"
 	$SUDO rmdir   "$where" || fatal "Failed to remove %s directory" "$where"
 
-    local mp=${where##*/}
-    local what=$(sed "s/$mp@//" $STAT_FILE)
-    if [ -z "$what" ]; then
+    say_unmounted "$where" "$what"
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+say_unmounted() {
+    local where=$1  what=$2
+    if [ -n "$what" ]; then
         say "Unmounted %s (%s)" "$hi_co$where$m_co" "$hi_co$what$m_co"
     else
         say "Unmounted %s" "$hi_co$where$m_co"
     fi
-
-    local mp=${where##*/}
-	$SUDO sed -i "/^$mp@/d" $STAT_FILE
 }
+
 
 #------------------------------------------------------------------------------
 #
@@ -418,7 +424,7 @@ do_umount() {
 #------------------------------------------------------------------------------
 fatal() {
     local fmt=$1 ; shift
-    printf "$ME: $warn_co$fmt$nc_co\n" "$@" >&2
+    [ "$BE_SILENT" ] || printf "$ME: $warn_co$fmt$nc_co\n" "$@" >&2
     exit 2
 }
 
@@ -427,7 +433,7 @@ fatal() {
 #
 #------------------------------------------------------------------------------
 say() {
-    [ "$BE_SILENT$ONLY_MPS" ] && return
+    [ "$ONLY_MPS" ] && return
     local fmt=$1 ; shift
     printf "$ME: $m_co$fmt$nc_co\n" "$@"
 }
