@@ -306,7 +306,6 @@ any_mount() {
         $SUDO mkdir -p "$MNT_DIR"
         $SUDO mount -t tmpfs -o size=1m tmpfs "$MNT_DIR"
         mountpoint -q "$MNT_DIR" || fatal "Could not mount %s as %s"  "$MNT_DIR" 'tmpfs'
-        $SUDO touch $STAT_FILE
     fi
     for n in $(seq 1 $MAX_DIRS); do
         where=$MNT_DIR/$name$n
