@@ -746,7 +746,7 @@ read_params() {
 #
 #------------------------------------------------------------------------------
 show_version() {
-    local fmt="%s %s$num_co %s$nc_co ($date_co%s$nc_co)\n"
+    local fmt="$hi_co%s$nc_co %s$num_co %s$nc_co ($date_co%s$nc_co)\n"
     printf "$fmt" "$ME" "version" "$VERSION"  "$VERSION_DATE"
 
     [ $# -gt 0 ]  && exit 0
