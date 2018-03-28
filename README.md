@@ -4,6 +4,22 @@ Easily mount and unmount iso files and squashfs files.
 There is a lot of commonality in the scripts so there is
 only one real script and the others are symlinks to it.
 
+What's new?
+-----------
+    isomount version 00.03.00 (Wed Mar 28 15:44:29 MDT 2018)
+         dfh version 00.03.00 (Wed Mar 28 15:44:56 MDT 2018)
+
+* Add the dfh command
+
+* Improve the infrastructure by getting rid of the "status" file by
+using the losetup command.
+
+* Improve the table of mount-points
+
+* More options
+
+* I'm pushing versions 00.03.00 so I can get to work adding a slick
+  GUI interface
 
 TLDR:
 -----
