@@ -4,13 +4,6 @@ Easily mount and unmount iso files and squashfs files.
 There is a lot of commonality in the scripts so there is
 only one real script and the others are symlinks to it.
 
-IMPORTANT NOTE
---------------
-**Starting with version 00.02.00 an incompatible change was made.
-Please make sure all of the mountpoints from the previous
-version are unmounted before you upgrade**
-
-Also, this is very early beta.
 
 TLDR:
 -----
