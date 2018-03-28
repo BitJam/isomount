@@ -27,11 +27,13 @@ usage() {
 cat << Usage
 ${bold_co}Usage:${m_co} $ME [options]${nc_co}
 
-List the "interesting" mounted file systems.
+List "interesting" mounted file systems for humans.  Display in color and
+show the back-files for loop devices.
 
 ${bold_co}Options:$nc_co
     $m_co-c --color=<xxx>    $nc_co set color scheme to off|low|low2|bw|dark|high
     $m_co-H --header=<type>  $nc_co change header color: norm, rev1, rev2, rev3
+                                             (n,      r1,   r2,   r3)
     $m_co-h --help           $nc_co show this usage
     $m_co-v --version        $nc_co show version number and exit
     $m_co-x, --exclude-type=<xxx> $nc_co list of more file types to exclude
