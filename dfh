@@ -99,7 +99,7 @@ main() {
 
     case $HEADER_TYPE in
         norm|rev[123]|n|r[123]) ;;
-                    *) fatal "Unknown header type: %s" "%HEADER_TYPE"
+                    *) fatal "Unknown header type: %s" "$HEADER_TYPE"
     esac
 
     [ "$BE_VERBOSE" ] && show_version
