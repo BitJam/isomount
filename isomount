@@ -12,6 +12,7 @@ ME=${ACTION:=$MY_NAME}
  ISO_NAME="iso"
   SQ_NAME="sq"
   SQ_FILE="antiX/linuxfs"
+: ${HEADER_TYPE:=rev2}
 
 #------------------------------------------------------------------------------
 #
@@ -118,6 +119,8 @@ opt_usage() {
 ${bold_co}Options:$nc_co
     $m_co-c --color=<xxx>  $nc_co set color scheme to off|low|low2|bw|dark|high
     $m_co-h --help         $nc_co show this usage
+    $m_co-H --header=<type>  $nc_co change header color: norm, rev1, rev2, rev3
+                                             (n,      r1,   r2,   r3)
     $m_co-q --quiet        $nc_co only show mountpoints
     $m_co-Q --Quiet        $nc_co don't show mountpoint(s)
     $m_co-s --silent       $nc_co don't print error message
@@ -170,6 +173,7 @@ usage() {
 takes_param() {
     case $1 in
         -color|c) return 0 ;;
+       -header|H) return 0 ;;
                *) return 1 ;;
     esac
 }
@@ -193,6 +197,9 @@ eval_argument() {
          -color|c)  COLOR_SCHEME=$val   ;;
          -color=*)  COLOR_SCHEME=$val   ;;
           -help|h)  DO_HELP=true        ;;
+        -header|H)  HEADER_TYPE=$val    ;;
+        -header=*)  HEADER_TYPE=$val    ;;
+
          -quiet|q)  ONLY_MPS=true       ;;
          -Quiet|Q)  NO_MPS=true         ;;
         -silent|s)  BE_SILENT=true      ;;
@@ -207,7 +214,7 @@ eval_argument() {
 #
 #------------------------------------------------------------------------------
 main() {
-    local SHIFT SHIFT_2  SHORT_STACK="hQqsVv"
+    local SHIFT SHIFT_2  SHORT_STACK="HhQqsVv"
     local NO_MPS ONLY_MPS  BE_SILENT BE_VERBOSE  PARAM_CNT
 
     set_colors
@@ -229,6 +236,11 @@ main() {
        clean-isomount)   ;;
         show-isomount)   ;;
                     *) fatal "Unknown program name %s" $ME ;;
+    esac
+
+    case $HEADER_TYPE in
+        norm|rev[123]|n|r[123]) ;;
+                    *) fatal "Unknown header type: %s" "$HEADER_TYPE"
     esac
 
     [ "$DO_HELP" ] && usage "$CMD_CMDS"
@@ -492,8 +504,28 @@ Show_Mounts
     fi
 
     printf "\n"
-    local hfmt="$head_co$rev_co%-${w_file}s  %-${w_type}s  %${w_size}s  %-${w_mp}s$nc_co\n"
-    printf "$hfmt" "$lab_file" "$lab_type" "$lab_size" "$lab_mp"
+
+    local h_co=$head_co$rev_co hfmt hfmt1 hfmt1
+    local h1=
+    case $HEADER_TYPE in norm|n) h_co=$head_co  ;; esac
+
+    hfmt1="$h_co%-${w_file}s  %-${w_type}s  %${w_size}s  %-${w_mp}s$nc_co\n"
+    hfmt2="$h_co%-${w_file}s$nc_co  $h_co%-${w_type}s$nc_co  $h_co%${w_size}s$nc_co  $h_co%-${w_mp}s$nc_co\n"
+
+    hfmt=$hfmt1
+    case $HEADER_TYPE in
+          rev2|r2) hfmt=$hfmt2 ;;
+    esac
+
+    case $HEADER_TYPE in
+        rev3|r3)
+            printf "$h_co%s  "   "$(rpad $w_file  "$lab_file$nc_co"  )"
+            printf "$h_co%s  "   "$(rpad $w_type  "$lab_type$nc_co"  )"
+            printf "$h_co%s  "   "$(lpad $w_size  "$lab_size$nc_co"  )"
+            printf "$h_co%s\n"   "$lab_mp$nc_co"  ;;
+        *)
+            printf "$hfmt" "$lab_file"  "$lab_type" "$lab_size" "$lab_mp" ;;
+    esac
 
     local fmt="$dev_co%-${w_file}s  $warn_co%-${w_type}s  $num_co%${w_size}s  $m_co%-${w_mp}s$nc_co\n"
 
@@ -551,6 +583,29 @@ my_truncate() {
     local offset=$(( len - max + 3))
     printf "%s\n" "...${str:$offset:$len}"
 }
+
+lpad() {
+    local width=$1  str=$2
+    local len=$(echo $str | sed -r 's/\x1B\[[0-9;]+[mKC]//g' | wc -m)
+    if [ $len -ge $width ]; then
+        printf "%s" "$str"
+        return
+    fi
+
+    printf "%$((width - len + 1))s%s" "" "$str"
+}
+
+rpad() {
+    local width=$1  str=$2
+    local len=$(echo $str | sed -r 's/\x1B\[[0-9;]+[mKC]//g' | wc -m)
+    if [ $len -ge $width ]; then
+        printf "%s" "$str"
+        return
+    fi
+
+    printf "%s%$((width - len + 1))s" "$str" ""
+}
+
 
 #------------------------------------------------------------------------------
 #
