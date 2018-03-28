@@ -18,7 +18,6 @@ MIN_DEV_WIDTH=12
 EXCLUDE_FS_TYPES="tmpfs devtmpfs rootfs proc devpts sysfs mqueue securityfs debugfs
                  fusectl pstore cgroup binfmt_misc hugetlbfs"
 
-
 usage() {
 
     show_version
