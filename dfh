@@ -77,8 +77,8 @@ eval_argument() {
             -header=*)  HEADER_TYPE=$val    ;;
               -help|h)  usage               ;;
            -version|v)  SHOW_VERSION=true   ;;
-      -exclude-type|x)  USER_EXCLUDE="$USER_EXCLUDE ${var//, }" ;;
-                    *)  fatal "Unknown parameter %s" "-$arg"    ;;
+      -exclude-type|x)  USER_EXCLUDES="$USER_EXCLUDES ${val//,/ }" ;;
+                    *)  fatal "Unknown parameter %s" "-$arg"       ;;
     esac
 }
 
@@ -112,8 +112,7 @@ main() {
 # This is the main event
 #------------------------------------------------------------------------------
 do_dfh() {
-
-    local exclude_list=$(echo $EXCLUDE_FS_TYPES $USER_EXCLUDE | sed -r "s/\s+/ -x /g")
+    local exclude_list=$(echo $EXCLUDE_FS_TYPES $USER_EXCLUDES | sed -r "s/\s+/ -x /g")
     local data=$(df -ahT -x $exclude_list)
 
     #echo "$data"
