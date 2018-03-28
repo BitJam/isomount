@@ -71,46 +71,35 @@ Mount the iso file specified at a directory like /mnt/iso1/.  If
 it is an MX or antiX iso then also mount the /antiX/linuxfs file
 as a squashfs file.
 
-Also add an entry in the status file like /mnt/iso1@<name> where
-
-<name> is the path to the mounted file.
-
 --------------------------------------------------------------------
 
 **sqmount [options] /path/to/squashfs-file**
 
 Mount the squashfs file specified at a directory like /mnt/sq1/
 
-Also add an entry in the status file like /mnt/sq1@<name> where
-<name> is the path to the mounted file.
-
 --------------------------------------------------------------------
 
 **isoumount [options] [/mnt/iso2|'all']**
 
 Umount the most recently mounted iso file.  If a mountpoint is
-given then unmount that mountpoint instead.  In both cases we also
-remove the entry from the status file.
+given then unmount that mountpoint instead.
 
-If 'all' is given then we umount all of our mounts and empty
-the status file.
+If 'all' is given then we umount all of our mounts
 
 -------------------------------------------------------------------
 
 **squmount [options] [/mnt/sq2|'all']**
 
 Umount the most recently mounted squashfs file.  If a mountpoint is
-given then unmount that mountpoint instead.  In both cases we also
-remove the entry from the status file.
+given then unmount that mountpoint instead.
 
-If 'all' is given then we umount all of our mounts and empty
-the status file.
+If 'all' is given then we umount all of our mounts.
 
 --------------------------------------------------------------------
 
 **clean-isomount [options]**
 
-Clean up leftover mountpoint directories and @ files.
+Clean up leftover mountpoint directories.
 
 --------------------------------------------------------------------
 
@@ -125,14 +114,15 @@ The following options are available for all six commands.
 
     -c --color=<xxx>   set color scheme to off|low|low2|bw|dark|high
     -h --help          show this usage
+    -H --header=<type>   change header color: norm, rev1, rev2, rev3
+                                             (n,      r1,   r2,   r3)
     -q --quiet         only show mountpoints
-    -q --quiet         don't show mountpoint(s)
-    -s --silent        don't print anything except errors
+    -Q --Quiet         don't show mountpoint(s)
+    -s --silent        don't print error message
     -v --version       show version number and exit
     -V --verbose       be more verbose
 
-Some options don't pertain to all commands.
-
+Some options may not pertain to all commands.
 
 Notes
 -----
