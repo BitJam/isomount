@@ -31,17 +31,25 @@ TLDR:
 
     show-isoumount
 
+**Show all mounted file systems in a very human friendly format:**
+
+    dfh
+
 
 Screen Shots
 ------------
 ### Mounting
 
-![isomount mounting](/images/isomount-01.png)
+![isomount mounting](/images/isomount-02.png)
 
 ### Unmounting
 
 
-![isoumount unmounting](/images/isoumount-01.png)
+![isoumount unmounting](/images/isoumount-02.png)
+
+### dfh output
+
+![isoumount unmounting](/images/dfh-01.png)
 
 Quick Start
 -----------
