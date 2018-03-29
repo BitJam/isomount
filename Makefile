@@ -3,6 +3,7 @@ ROOT        := .
 SHELL       := /bin/bash
 
 SCRIPTS     := isomount isoumount sqmount squmount clean-isomount show-isomount
+# SCRIPTS     := $(addsuffix -gui, $(SCRIPTS))
 SCRIPTS     := $(SCRIPTS) dfh
 BIN_DIR     := $(ROOT)/usr/local/bin
 MAN_DIR     := $(ROOT)/usr/share/man/man1
