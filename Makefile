@@ -21,7 +21,7 @@ help:
 
 install: scripts man-pages desktop_files
 scripts: | $(BIN_DIR)
-	cp $(SCRIPTS) $(BIN_DIR)
+	cp $(CP_OPTS) $(SCRIPTS) $(BIN_DIR)
 
 man-pages: | $(MAN_DIR)
 	cp $(CP_OPTS) man/* $(MAN_DIR)
