@@ -19,6 +19,7 @@ ME=${ACTION:=$MY_NAME}
 YAD_STD_OPTS="--center --width=900 --height=600 --image=$ANTIX_IMAGE  --button=gtk-ok:0 "
 YAD_ERR_OPTS="--center --width=800 --height=300 --image=$ANTIX_IMAGE  --button=gtk-ok:0 "
 
+SCREEN_WIDTH=$(stty size | cut -d" " -f2)
 #------------------------------------------------------------------------------
 #
 #
@@ -218,19 +219,21 @@ main() {
     read_all_cmdline_mingled "$@"
     shift $SHIFT_2
 
+    [ $SCREEN_WIDTH = 0 ] && GUI_MODE=true
+
     if [ "$GUI_MODE" ]; then
         set_colors gui
     else
         set_colors $COLOR_SCHEME
     fi
 
-    local max_param=0  min_param=0
-    case $ME in
+    local max_param=0  min_param=0 base=$ME
+    case $base in
           isomount|sqmount)  max_param=20  ; min_param=1 ;;
         isoumount|squmount)  max_param=1                 ;;
     esac
 
-    case $ME in
+    case $base in
              isomount)   ;;
               sqmount)   ;;
             isoumount)   ;;
@@ -251,11 +254,11 @@ main() {
     [ "$BE_VERBOSE" ] && show_version
     [ $PARAM_CNT -lt $min_param ] && usage
     [ $PARAM_CNT -gt $max_param ] && fatal "Too many command line parameters"
-    case $ME in
+    case $base in
              isomount)  do_iso_mount  "$CMD_CMDS"           ;;
               sqmount)  do_sq_mount   "$CMD_CMDS"           ;;
             isoumount)  do_iso_umount "$CMD_CMDS"           ;;
-            squmount)   do_sq_umount  "$CMD_CMDS"           ;;
+             squmount)  do_sq_umount  "$CMD_CMDS"           ;;
        clean-isomount)  clean_mounts                        ;;
         show-isomount)  show_mounts ; exit 0                ;;
                     *)  fatal "Unknown program name %s" $ME ;;
@@ -507,14 +510,15 @@ show_mounts() {
 $(echo "$data")
 Show_Mounts
 
-    local w_screen=$(stty size | cut -d" " -f2)  clip_mp
-    if [ $w_screen -lt $((w_file + w_type + w_size + w_mp + 6)) ]; then
+
+    local clip_mp
+    if [ $SCREEN_WIDTH -lt $((w_file + w_type + w_size + w_mp + 6)) ]; then
         clip_mp=true
         lab_mp="MntPnt"
         w_mp=$((w_mp - ${#MNT_DIR} -1))
         [ $w_mp -lt ${#w_lab} ] && w_mp=${w_mp}
     fi
-    local truncate=$((w_file + w_type + w_size + w_mp - w_screen + 6))
+    local truncate=$((w_file + w_type + w_size + w_mp - SCREEN_WIDTH + 6))
     if [ $truncate -gt 0 ]; then
         w_file=$((w_file - truncate))
         [ $w_file -lt ${#lab_file} ] && fatal "The screen appears to be way too narrow!"
@@ -570,7 +574,7 @@ show_mounts_gui() {
         --column="$lab_file" \
         --column="$lab_type" \
         --column="$lab_size" \
-        --column="$lab_mp" &
+        --column="$lab_mp"
         #2>/dev/null
 
     exit 0
@@ -594,7 +598,7 @@ Device_Info
 #------------------------------------------------------------------------------
 error_box() {
     local text=$(printf "\n\n%s\n\n" "$*")
-    $YAD $YAD_ERR_OPTS --title "$ME"  --text "$text" &
+    $YAD $YAD_ERR_OPTS --title "$ME"  --text "$text"
     exit 2
 }
 
