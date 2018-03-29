@@ -14,6 +14,11 @@ ME=${ACTION:=$MY_NAME}
   SQ_FILE="antiX/linuxfs"
 : ${HEADER_TYPE:=rev2}
 
+         YAD="/usr/bin/yad"
+ ANTIX_IMAGE="/usr/local/lib/antiX/antiX-logo.png"
+YAD_STD_OPTS="--center --width=900 --height=600 --image=$ANTIX_IMAGE  --button=gtk-ok:0 "
+YAD_ERR_OPTS="--center --width=800 --height=300 --image=$ANTIX_IMAGE  --button=gtk-ok:0 "
+
 #------------------------------------------------------------------------------
 #
 #
@@ -118,6 +123,7 @@ opt_usage() {
 
 ${bold_co}Options:$nc_co
     $m_co-c --color=<xxx>  $nc_co set color scheme to off|low|low2|bw|dark|high
+    $m_co-g --gui          $nc_co show output in a yad window
     $m_co-h --help         $nc_co show this usage
     $m_co-H --header=<type>  $nc_co change header color: norm, rev1, rev2, rev3
                                              (n,      r1,   r2,   r3)
@@ -196,6 +202,7 @@ eval_argument() {
     case $arg in
          -color|c)  COLOR_SCHEME=$val   ;;
          -color=*)  COLOR_SCHEME=$val   ;;
+           -gui|g)  GUI_MODE=true       ;;
           -help|h)  DO_HELP=true        ;;
         -header|H)  HEADER_TYPE=$val    ;;
         -header=*)  HEADER_TYPE=$val    ;;
@@ -435,7 +442,10 @@ say_unmounted() {
 #------------------------------------------------------------------------------
 fatal() {
     local fmt=$1 ; shift
-    [ "$BE_SILENT" ] || printf "$ME: $warn_co$fmt$nc_co\n" "$@" >&2
+    if [ -z "$BE_SILENT" ]; then
+        [ "$GUI_MODE" ] && error_box "$(printf "$fmt%s" "$@" '\n')"
+        printf "$ME: $warn_co$fmt$nc_co\n" "$@" >&2
+    fi
     exit 2
 }
 
@@ -444,8 +454,10 @@ fatal() {
 #
 #------------------------------------------------------------------------------
 say() {
-    [ "$ONLY_MPS" ] && return
     local fmt=$1 ; shift
+
+    [ "$ONLY_MPS" ] && return
+    [ "$GUI_MODE" ] && GUI_TEXT="$GUI_TEXT$(printf "$fmt%s"  "$@" '\n')"
     printf "$ME: $m_co$fmt$nc_co\n" "$@"
 }
 
@@ -477,6 +489,10 @@ show_mounts() {
     local lab_mp="Mounted at"
 
     local dev type size used avail percent mp file
+    [ "$GUI_MODE" ] && show_mounts_gui "$data"
+
+    [ -z "$data" -o -n "$GUI_MODE" ] && return
+
     local w_type=${#lab_type}  w_size=${#lab_size}  w_mp=${#lab_mp} w_file=${#lab_file}
     while read dev type size used avail percent mp; do
         [ ${#dev} -gt 0   ] || continue
@@ -538,6 +554,47 @@ Show_Mounts
     done <<Show_Mounts
 $(echo "$data")
 Show_Mounts
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+show_mounts_gui() {
+    local data=$1
+    device_info "$data" | $YAD $YAD_STD_OPTS \
+        --title "$ME"        \
+        --text "$GUI_TEXT"   \
+        --list               \
+        --column="$lab_file" \
+        --column="$lab_type" \
+        --column="$lab_size" \
+        --column="$lab_mp" &
+        #2>/dev/null
+
+    exit 0
+}
+
+device_info() {
+    local data="$1"
+
+    while read dev type size used avail percent mp; do
+        [ ${#dev} -gt 0   ] || continue
+        file=$(loop_to_file $dev)
+        echo -e "$file\n$type\n$size\n$mp"
+    done <<Device_Info
+$(echo "$data")
+Device_Info
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+error_box() {
+    local text=$(printf "\n\n%s\n\n" "$*")
+    $YAD $YAD_ERR_OPTS --title "$ME"  --text "$text" &
+    exit 2
 }
 
 #------------------------------------------------------------------------------
@@ -640,13 +697,16 @@ clean_mounts() {
 #
 #------------------------------------------------------------------------------
 set_colors() {
-    local color=${1:-high}
+    local scheme=${1:-high}
 
     local e=$(printf "\e")
 
-    rev_co="$e[7m" ; nc_co="$e[0m"
+    case $scheme in
+        gui) rev_co=        ; nc_co=        ;;
+          *) rev_co="$e[7m" ; nc_co="$e[0m" ;;
+    esac
 
-    if [ "$color" = 'off' ]; then
+    if [ "$scheme" = 'off' -o "$scheme" == 'gui'  ]; then
 
          black=  ;    blue=  ;    green=  ;    cyan=  ;
            red=  ;  purple=  ;    brown=  ; lt_gray=  ;
@@ -669,7 +729,7 @@ set_colors() {
         lt_red="$e[1;31m"   ; magenta="$e[1;35m"     ;   yellow="$e[1;33m"   ;   white="$e[1;37m"   ;
          nc_co="$e[0m"      ;   brown="$e[0;33m"     ;   rev_co="$e[7m"      ;    gray="$e[37m"     ;
 
-    case $color in
+    case $scheme in
         high)
          inst_co=$lt_cyan    ;  mark_co=$rev_co    ;     grep_co="1;35"
          bold_co=$yellow     ;    fs_co=$lt_blue   ;      num_co=$magenta    ;
@@ -711,7 +771,7 @@ set_colors() {
         fname_co=$white      ;     m_co=$gray      ;     warn_co=$white      ; ;;
 
         *)
-            fatal "Unknown color parameter: %s" "$color"
+            fatal "Unknown color parameter: %s" "$scheme"
     esac
 }
 
