@@ -179,7 +179,7 @@ takes_param() {
 #------------------------------------------------------------------------------
 assign_parameter() {
     local cnt=$1 param=$2
-    CMD_CMDS="$CMD_CMDS${CMD_CMDS:+ }$param"
+    CMD_CMDS="$CMD_CMDS$param\n"
 }
 
 #------------------------------------------------------------------------------
@@ -212,16 +212,22 @@ eval_argument() {
 main() {
     local SHIFT SHIFT_2  SHORT_STACK="HhQqsVv"
     local NO_MPS ONLY_MPS  BE_SILENT BE_VERBOSE  PARAM_CNT
+    local GUI_TEXT
 
     set_colors
     read_all_cmdline_mingled "$@"
     shift $SHIFT_2
-    set_colors $COLOR_SCHEME
+
+    if [ "$GUI_MODE" ]; then
+        set_colors gui
+    else
+        set_colors $COLOR_SCHEME
+    fi
 
     local max_param=0  min_param=0
     case $ME in
-          isomount|sqmount)  max_param=1  ; min_param=1 ;;
-        isoumount|squmount)  max_param=1                ;;
+          isomount|sqmount)  max_param=20  ; min_param=1 ;;
+        isoumount|squmount)  max_param=1                 ;;
     esac
 
     case $ME in
@@ -239,19 +245,19 @@ main() {
                     *) fatal "Unknown header type: %s" "$HEADER_TYPE"
     esac
 
-    [ "$DO_HELP" ] && usage "$CMD_CMDS"
+    [ "$DO_HELP" ]      && usage "$CMD_CMDS"
     [ "$SHOW_VERSION" ] && show_version 'exit'
 
     [ "$BE_VERBOSE" ] && show_version
     [ $PARAM_CNT -lt $min_param ] && usage
     [ $PARAM_CNT -gt $max_param ] && fatal "Too many command line parameters"
     case $ME in
-             isomount)  iso_mount    "$CMD_CMDS"       ;;
-              sqmount)  sq_mount     "$CMD_CMDS"       ;;
-            isoumount)  iso_umount   "$CMD_CMDS"       ;;
-             squmount)  sq_umount    "$CMD_CMDS"       ;;
-       clean-isomount)  clean_mounts                   ;;
-        show-isomount)  show_mounts ; exit 0           ;;
+             isomount)  do_iso_mount  "$CMD_CMDS"           ;;
+              sqmount)  do_sq_mount   "$CMD_CMDS"           ;;
+            isoumount)  do_iso_umount "$CMD_CMDS"           ;;
+            squmount)   do_sq_umount  "$CMD_CMDS"           ;;
+       clean-isomount)  clean_mounts                        ;;
+        show-isomount)  show_mounts ; exit 0                ;;
                     *)  fatal "Unknown program name %s" $ME ;;
     esac
 
@@ -263,26 +269,35 @@ main() {
 #
 #
 #------------------------------------------------------------------------------
-iso_mount() {
-    local what=$1
-    any_mount "$ISO_NAME" "$what" -o loop,user,ro,exec -t iso9660
-
+do_iso_mount() {
+    local data=$1  file
+    while read file; do
+        [ -z "$file" ] && continue
+        any_mount "$ISO_NAME" "$file" -o loop,user,ro,exec -t iso9660
+    done <<Do_Iso_Mount
+$(echo -e "$data")
+Do_Iso_Mount
 }
 
 #------------------------------------------------------------------------------
 #
 #
 #------------------------------------------------------------------------------
-sq_mount() {
-    local what=$1
-    any_mount "$SQ_NAME" "$what"  -o loop,user,ro,exec -t squashfs
+do_sq_mount() {
+    local data=$1  file
+    while read file; do
+        [ -z "$file" ] && continue
+        any_mount "$SQ_NAME" "$file" -o loop,user,ro,exec -t squashfs
+    done <<Do_Sq_Mount
+$(echo -e "$data")
+Do_Sq_Mount
 }
 
 #------------------------------------------------------------------------------
 #
 #
 #------------------------------------------------------------------------------
-iso_umount() {
+do_iso_umount() {
     local name=$ISO_NAME  where=$1
     any_umount "$name" $where
 }
@@ -291,11 +306,10 @@ iso_umount() {
 #
 #
 #------------------------------------------------------------------------------
-sq_umount() {
+do_sq_umount() {
     local name=$SQ_NAME  Ewhere=$1
     any_umount "$name" $where
 }
-
 
 #------------------------------------------------------------------------------
 #
@@ -335,7 +349,7 @@ any_mount() {
 
     local sq_file=$where/$SQ_FILE
     [ "$name" == "$ISO_NAME" -a -e "$sq_file" ] || return
-    sq_mount "$sq_file"
+    do_sq_mount "$sq_file"
 }
 
 #------------------------------------------------------------------------------
@@ -493,7 +507,6 @@ show_mounts() {
     done <<Show_Mounts
 $(echo "$data")
 Show_Mounts
-
 
     local w_screen=$(stty size | cut -d" " -f2)  clip_mp
     if [ $w_screen -lt $((w_file + w_type + w_size + w_mp + 6)) ]; then
