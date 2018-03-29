@@ -15,9 +15,13 @@ ME=${ACTION:=$MY_NAME}
 : ${HEADER_TYPE:=rev2}
 
          YAD="/usr/bin/yad"
- ANTIX_IMAGE="/usr/local/lib/antiX/antiX-logo.png"
-YAD_STD_OPTS="--center --width=900 --height=600 --image=$ANTIX_IMAGE  --button=gtk-ok:0 "
-YAD_ERR_OPTS="--center --width=800 --height=300 --image=$ANTIX_IMAGE  --button=gtk-ok:0 "
+   YAD_IMAGE="/usr/local/lib/antiX/antiX-logo.png"
+YAD_STD_OPTS="--center --width=900 --height=600 --button=gtk-ok:0 "
+YAD_ERR_OPTS="--center --width=800 --height=300 --button=gtk-ok:0 "
+
+if test -r $YAD_IMAGE; then
+    YAD_STD_OPTS="$YAD_STD_OPTS -image=$YAD_IMAGE"
+    YAD_ERR_OPTS="$YAD_STD_OPTS -image=$YAD_IMAGE"
 
 SCREEN_WIDTH=$(stty size | cut -d" " -f2)
 #------------------------------------------------------------------------------
