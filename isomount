@@ -29,14 +29,9 @@ SUDO="sudo"
 iso_mount_usage() {
     local fname=$MNT_DIR/${ISO_NAME}1
     cat <<Usage
-${bold_co}Usage:${m_co} $ME [options] /path/to/file.iso${nc_co}
-    Mount the iso file specified at a directory like $fname.  If
-    it is an MX or antiX iso then also mount the /$SQ_FILE file
-    as a squashfs file.
-
-    Also add an entry in the status file like /mnt/iso1@<name> where
-    <name> is the path to the mounted file.
-
+${bold_co}Usage:${m_co} $ME [options] iso-file-1 [iso-file-2 ...]${nc_co}
+    Mount the iso files specified at directories like $fname.  For
+    antiX and MX iso files then also mount the /$SQ_FILE squashfs file.
 Usage
     opt_usage
 }
@@ -48,11 +43,8 @@ Usage
 sq_mount_usage() {
     local fname=$MNT_DIR/${SQ_NAME}1
     cat <<Usage
-${bold_co}Usage:${m_co} $ME [options] /path/to/squashfs-file${nc_co}
-    Mount the squashfs file specified at a directory like $fname/
-
-    Also add an entry in the status file like /mnt/sq1@<name> where
-    <name> is the path to the mounted file.
+${bold_co}Usage:${m_co} $ME [options] squashfs-1 [squashfs-2 ...]${nc_co}
+    Mount the squashfs file(s) specified at a directory like $fname/
 Usage
     opt_usage
 }
@@ -66,11 +58,9 @@ iso_umount_usage() {
     cat <<Usage
 ${bold_co}Usage:${m_co} $ME [options] [$fname|'all']${nc_co}
     Umount the most recently mounted iso file.  If a mountpoint is
-    given then unmount that mountpoint instead.  In both cases we also
-    remove then entry from the status file.
+    given then unmount that mountpoint instead.
 
-    If 'all' is given then unmount all of our mounts and all entries
-    from the status file.
+    If 'all' is given then unmount all of our mounts.
 Usage
     opt_usage
 }
@@ -87,8 +77,7 @@ ${bold_co}Usage:${m_co} $ME [options] [$fname|'all']${nc_co}
     given then unmount that mountpoint instead.  In both cases we also
     delete the mountpoint directory and the $fname@<name> file.
 
-    If 'all' is given then unmount all of our mounts and all entries
-    from the status file.
+    If 'all' is given then unmount all of our mounts.
 Usage
     opt_usage
 }
