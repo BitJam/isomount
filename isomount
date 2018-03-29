@@ -98,7 +98,7 @@ Usage
 #
 #
 #------------------------------------------------------------------------------
-show_usage() {
+show_nounts_usage() {
     cat <<Usage
 ${bold_co}Usage:${m_co} $ME [options]${nc_co}
     Show the currently mounted iso and squashfs files
@@ -140,7 +140,7 @@ usage() {
         iso_umount_usage   ; echo
         sq_umount_usage    ; echo
         clean_usage        ; echo
-        show_usage         ; echo
+        show_mounts_usage  ; echo
 
         DONT_SHOW_OPTS=
         opt_usage
@@ -153,7 +153,7 @@ usage() {
             isoumount) iso_umount_usage    ;;
              squmount) sq_umount_usage     ;;
        clean-isomount) clean_usage         ;;
-        show-isomount) show_usage          ;;
+        show-isomount) show_moounts_usage  ;;
                     *) fatal "Unknown program name %s" $ME ;;
     esac
 
