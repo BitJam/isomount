@@ -484,7 +484,6 @@ verbose() {
 #------------------------------------------------------------------------------
 show_mounts() {
     local data=$(df -ahT | grep -E " $MNT_DIR/($ISO_NAME|$SQ_NAME)[0-9]")
-    [ -z "$data" ] && return
 
     local lab_type="Type"
     local lab_file="File"
