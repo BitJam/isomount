@@ -223,7 +223,7 @@ main() {
     read_all_cmdline_mingled "$@"
     shift $SHIFT_2
 
-    [ $SCREEN_WIDTH = 0 ] && GUI_MODE=true
+    [ -z "$SCREEN_WIDTH"  -o "$SCREEN_WIDTH" = 0 ] && GUI_MODE=true
 
     if [ "$GUI_MODE" ]; then
         set_colors gui
