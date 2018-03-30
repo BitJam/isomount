@@ -7,6 +7,7 @@ SCRIPTS     := isomount isoumount sqmount squmount clean-isomount show-isomount
 SCRIPTS     := $(SCRIPTS) dfh
 BIN_DIR     := $(ROOT)/usr/local/bin
 MAN_DIR     := $(ROOT)/usr/share/man/man1
+DESKTOP_DIR := $(ROOT)/usr/share/applications/antix
 ALL_DIRS    := $(BIN_DIR) $(MAN_DIR) $(DESKTOP_DIR)
 CP_OPTS     := --no-dereference --preserve=mode,links
 
