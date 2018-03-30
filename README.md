@@ -6,20 +6,21 @@ only one real script and the others are symlinks to it.
 
 What's new?
 -----------
-    isomount version 00.03.00 (Wed Mar 28 15:44:29 MDT 2018)
-         dfh version 00.03.00 (Wed Mar 28 15:44:56 MDT 2018)
+isomount version 00.04.02 (Thu Mar 29 21:39:34 MDT 2018)
+     dfh version 00.04.02 (Thu Mar 29 21:38:39 MDT 2018
 
-* Add the dfh command
+* Add a --gui option to display results in yad
 
-* Improve the infrastructure by getting rid of the "status" file by
-using the losetup command.
+* Add 4 desktop files that use gui mode. The ones for
+isomount and isoumount allow for drag-and-drop if they
+are displayed in rox-filer.  The spacefm desktop/pinboard
+doesn't work and the spacefm filar doesn't work but, like
+rox-filer, you can drag from it.
 
-* Improve the table of mount-points
+* Note: if "stty size" doesn't give us a non-zero width
+then we automatically use gui mode.  This was one of
+the tricks needed to work with gksu.  (((((sigh)))))
 
-* More options
-
-* I'm pushing versions 00.03.00 so I can get to work adding a slick
-  GUI interface
 
 TLDR:
 -----
