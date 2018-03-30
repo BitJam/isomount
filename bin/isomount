@@ -139,7 +139,7 @@ Usage
 usage() {
 
     show_version
-    printf "\n"
+    printf '\n'
 
     if [ "$1" == 'all' ]; then
         DONT_SHOW_OPTS=true
@@ -162,7 +162,7 @@ usage() {
              squmount) sq_umount_usage     ;;
        clean-isomount) clean_usage         ;;
         show-isomount) show_moounts_usage  ;;
-                    *) fatal "Unknown program name %s" $ME ;;
+                    *) fatal $"Unknown program name %s" $ME ;;
     esac
 
 
@@ -209,7 +209,7 @@ eval_argument() {
         -silent|s)  BE_SILENT=true      ;;
        -version|v)  SHOW_VERSION=true   ;;
        -verbose|V)  BE_VERBOSE=true     ;;
-                *)  fatal "Unknown parameter %s" "-$arg"  ;;
+                *)  fatal $"Unknown parameter %s" "-$arg"  ;;
     esac
 }
 
@@ -250,12 +250,12 @@ main() {
              squmount)   ;;
        clean-isomount)   ;;
         show-isomount)   ;;
-                    *) fatal "Unknown program name %s" $ME ;;
+                    *) fatal $"Unknown program name %s" $ME ;;
     esac
 
     case $HEADER_TYPE in
         norm|rev[123]|n|r[123]) ;;
-                    *) fatal "Unknown header type: %s" "$HEADER_TYPE"
+                    *) fatal $"Unknown header type: %s" "$HEADER_TYPE"
     esac
 
     [ "$DO_HELP" ]      && usage "$CMD_CMDS"
@@ -263,7 +263,7 @@ main() {
 
     [ "$BE_VERBOSE" ] && show_version
     [ $PARAM_CNT -lt $min_param ] && usage
-    [ $PARAM_CNT -gt $max_param ] && fatal "Too many command line parameters"
+    [ $PARAM_CNT -gt $max_param ] && fatal $"Too many command line parameters"
     case $base in
              isomount)  do_iso_mount  "$CMD_CMDS"           ;;
               sqmount)  do_sq_mount   "$CMD_CMDS"           ;;
@@ -271,7 +271,7 @@ main() {
              squmount)  do_sq_umount  "$CMD_CMDS"           ;;
        clean-isomount)  clean_mounts                        ;;
         show-isomount)  show_mounts ; exit 0                ;;
-                    *)  fatal "Unknown program name %s" $ME ;;
+                    *)  fatal $"Unknown program name %s" $ME ;;
     esac
 
     [ -z "$NO_MPS" ] && show_mounts
@@ -329,38 +329,38 @@ do_sq_umount() {
 #
 #------------------------------------------------------------------------------
 any_mount() {
-    verbose "any_mount(%s)" "$bold_co$*$quest_co"
+    verbose 'any_mount(%s)' "$bold_co$*$quest_co"
 
    clean_mounts
 
     local name=$1  what=$2    where  n; shift 2
-    [ -z "$what" ]  && fatal "Need to say what we should %s"   "$ME"
+    [ -z "$what" ]  && fatal $"Need to say what we should %s"   "$ME"
 
-    test -e "$what" || fatal "Cannot find file: %s"            "$what"
-    test -f "$what" || fatal "%s does not appear to be a file" "$what"
+    test -e "$what" || fatal $"Cannot find file: %s"            "$what"
+    test -f "$what" || fatal $"%s does not appear to be a file" "$what"
 
     if ! mountpoint -q "$MNT_DIR"; then
         $SUDO mkdir -p "$MNT_DIR"
         $SUDO mount -t tmpfs -o size=1m tmpfs "$MNT_DIR"
-        mountpoint -q "$MNT_DIR" || fatal "Could not mount %s as %s"  "$MNT_DIR" 'tmpfs'
+        mountpoint -q "$MNT_DIR" || fatal $"Could not mount %s as %s"  "$MNT_DIR" 'tmpfs'
     fi
     for n in $(seq 1 $MAX_DIRS); do
         where=$MNT_DIR/$name$n
         mountpoint -q "$where" || break
     done
-    mountpoint -q  "$where" && fatal "Mount point %s and below are already taken" "$where"
+    mountpoint -q  "$where" && fatal $"Mount point %s and below are already taken" "$where"
 
     local mp=${where##*/}
 
-    $SUDO mkdir -p "$where" || fatal "Could not create the directory %s" "$where"
+    $SUDO mkdir -p "$where" || fatal $"Could not create the directory %s" "$where"
     $SUDO mount "$@" "$what" "$where"
 
     if ! mountpoint -q "$where"; then
         $SUDO rmdir "$where"
-        fatal "Was unable to mount %s" "$* $what $where"
+        fatal $"Was unable to mount %s" "$* $what $where"
     fi
 
-    say "Mounted %s at %s" "$hi_co$what$m_co" "$hi_co$where$m_co"
+    say $"Mounted %s at %s" "$hi_co$what$m_co" "$hi_co$where$m_co"
 
     local sq_file=$where/$SQ_FILE
     [ "$name" == "$ISO_NAME" -a -e "$sq_file" ] || return
@@ -381,7 +381,7 @@ any_umount() {
         local mp i is_done
         for i in $(seq 1 3); do
             is_done=true
-            for mp in $(df -a | sed "s/.* //" | grep "^$MNT_DIR/" | tac); do
+            for mp in $(df -a | sed 's/.* //' | grep "^$MNT_DIR/" | tac); do
                 mountpoint -q $mp || continue
                 local what=$(mp_to_file "$where")
                 $SUDO umount $mp
@@ -398,12 +398,12 @@ any_umount() {
         return
 
     elif [ -n "$where" ]; then
-        mountpoint -q "$where" || fatal "%s is not a mountpoint" "$where"
+        mountpoint -q "$where" || fatal $"%s is not a mountpoint" "$where"
         name=${where##*/}
         name=${name%%[0-9]*}
         case $name in
             $ISO_NAME|$SQ_NAME) ;;
-            *) fatal "Unrecognized name %s" "$name" ;;
+            *) fatal $"Unrecognized name %s" "$name" ;;
         esac
 
     else
@@ -412,7 +412,7 @@ any_umount() {
             where=$MNT_DIR/$name$n
             mountpoint -q "$where" && break
         done
-        mountpoint -q "$where" || fatal "No %s mountpoints found" "$name"
+        mountpoint -q "$where" || fatal $"No %s mountpoints found" "$name"
 
     fi
     local sq_file=$where/$SQ_FILE
@@ -433,12 +433,12 @@ any_umount() {
 #
 #------------------------------------------------------------------------------
 do_umount() {
-    verbose "do_umount(%s)" "$bold_co$*$quest_co"
+    verbose 'do_umount(%s)' "$bold_co$*$quest_co"
     local where=$1
     local what=$(mp_to_file $where)
 	$SUDO umount  "$where"
-	mountpoint -q "$where" && fatal "Failed to umount %s" "$where"
-	$SUDO rmdir   "$where" || fatal "Failed to remove %s directory" "$where"
+	mountpoint -q "$where" && fatal $"Failed to umount %s" "$where"
+	$SUDO rmdir   "$where" || fatal $"Failed to remove %s directory" "$where"
 
     say_unmounted "$where" "$what"
 }
@@ -450,9 +450,9 @@ do_umount() {
 say_unmounted() {
     local where=$1  what=$2
     if [ -n "$what" ]; then
-        say "Unmounted %s (%s)" "$hi_co$where$m_co" "$hi_co$what$m_co"
+        say $"Unmounted %s (%s)" "$hi_co$where$m_co" "$hi_co$what$m_co"
     else
-        say "Unmounted %s" "$hi_co$where$m_co"
+        say $"Unmounted %s" "$hi_co$where$m_co"
     fi
 }
 
@@ -513,7 +513,7 @@ show_mounts() {
     [ "$GUI_MODE" ] && show_mounts_gui "$data"
 
     if [ -z "$data" ]; then
-        say "[%s]" "$(printf "There are no %s" "iso_mps")"
+        say '[%s]' "$(printf $"There are no %s" "$iso_mps")"
         return
     fi
 
@@ -540,11 +540,11 @@ Show_Mounts
     local truncate=$((w_file + w_type + w_size + w_mp - SCREEN_WIDTH + 6))
     if [ $truncate -gt 0 ]; then
         w_file=$((w_file - truncate))
-        [ $w_file -lt ${#lab_file} ] && fatal "The screen appears to be way too narrow!"
+        [ $w_file -lt ${#lab_file} ] && fatal $"The screen appears to be way too narrow!"
     fi
 
-    printf "\n"
-    printf "%s:\n" "$iso_mps"
+    printf '\n'
+    printf '%s:\n' "$iso_mps"
 
     local h_co=$head_co$rev_co hfmt hfmt1 hfmt1
     local h1=
@@ -652,13 +652,20 @@ my_yad() {
     fi
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+gui_bold() {
+    printf "$GUI_BOLD_FMT" "$*"
+}
 
 #------------------------------------------------------------------------------
 #
 #
 #------------------------------------------------------------------------------
 error_box() {
-    local text=$(printf "\n\n%s\n\n" "$*")
+    local text=$(printf '\n\n%s\n\n' "$*")
     my_yad $YAD_ERR_OPTS --title "$ME" --text "$text"
     exit 2
 }
@@ -668,7 +675,7 @@ error_box() {
 #------------------------------------------------------------------------------
 mp_to_file() {
     local where=$1
-    local loop=$(df -a | grep -E "^([^ ]+ +){5}$where$" | sed "s/ .*//")
+    local loop=$(df -a | grep -E "^([^ ]+ +){5}$where$" | sed 's/ .*//')
     [ -z "$loop" ] && return
     loop_to_file "$loop"
 }
@@ -678,7 +685,7 @@ mp_to_file() {
 #------------------------------------------------------------------------------
 loop_to_file() {
     local dev=$1
-    losetup -nl -O name,back-file | grep "^$dev " | sed -r "s/^[^ ]+ +//"
+    losetup -nl -O name,back-file | grep "^$dev " | sed -r 's/^[^ ]+ +//'
 }
 
 #------------------------------------------------------------------------------
@@ -687,7 +694,7 @@ loop_to_file() {
 #------------------------------------------------------------------------------
 files_to_loops_to_mps() {
     local where=$1
-    for loop_dev in $(losetup -ln -O name,back-file | grep -E "^[^\s]+ +$where/" | sed "s/ .*//"); do
+    for loop_dev in $(losetup -ln -O name,back-file | grep -E "^[^\s]+ +$where/" | sed 's/ .*//'); do
         df -a | grep "^$loop_dev " | awk '{print $6 }'
     done
 }
@@ -699,34 +706,34 @@ files_to_loops_to_mps() {
 my_truncate() {
     local max=$1  str=$2  len=${#2}
     if [ $len -le $max ]; then
-        printf "%s\n" "$str"
+        printf '%s\n' "$str"
         return
     fi
 
     local offset=$(( len - max + 3))
-    printf "%s\n" "...${str:$offset:$len}"
+    printf '...%s\n' "${str:$offset:$len}"
 }
 
 lpad() {
     local width=$1  str=$2
     local len=$(echo $str | sed -r 's/\x1B\[[0-9;]+[mKC]//g' | wc -m)
     if [ $len -ge $width ]; then
-        printf "%s" "$str"
+        printf '%s' "$str"
         return
     fi
 
-    printf "%$((width - len + 1))s%s" "" "$str"
+    printf "%$((width - len + 1))s%s" '' "$str"
 }
 
 rpad() {
     local width=$1  str=$2
     local len=$(echo $str | sed -r 's/\x1B\[[0-9;]+[mKC]//g' | wc -m)
     if [ $len -ge $width ]; then
-        printf "%s" "$str"
+        printf '%s' "$str"
         return
     fi
 
-    printf "%s%$((width - len + 1))s" "$str" ""
+    printf "%s%$((width - len + 1))s" "$str" ''
 }
 
 
@@ -741,7 +748,7 @@ clean_mounts() {
         mountpoint -q "$where" && continue
         $SUDO rmdir "$where"
         test -d "$where" && continue
-        say "Removed directory: %s" "$hi_co$where$m_co"
+        say $"Removed directory: %s" "$hi_co$where$m_co"
     done
 
     return
@@ -779,7 +786,7 @@ printN() {
 set_colors() {
     local scheme=${1:-high}
 
-    local e=$(printf "\e")
+    local e=$(printf '\e')
 
     case $scheme in
         gui) rev_co=        ; nc_co=        ;;
@@ -851,7 +858,7 @@ set_colors() {
         fname_co=$white      ;     m_co=$gray      ;     warn_co=$white      ; ;;
 
         *)
-            fatal "Unknown color scheme: %s" "$scheme"
+            fatal $"Unknown color scheme: %s" "$scheme"
     esac
 }
 
@@ -886,7 +893,7 @@ read_all_cmdline_mingled() {
 check_param_cnt() {
     local max=$1 ; shift
     [ $# -le $max ] && return
-    fatal "Unexpected command line parameter(s): %s" "$*"
+    fatal $"Unexpected command line parameter(s): %s" "$*"
 }
 
 #------------------------------------------------------------------------------
@@ -942,7 +949,7 @@ read_params() {
 #------------------------------------------------------------------------------
 show_version() {
     local fmt="$hi_co%s$nc_co %s$num_co %s$nc_co ($date_co%s$nc_co)\n"
-    printf "$fmt" "$ME" "version" "$VERSION"  "$VERSION_DATE"
+    printf "$fmt" "$ME" $"version" "$VERSION"  "$VERSION_DATE"
 
     [ $# -gt 0 ]  && exit 0
 }
