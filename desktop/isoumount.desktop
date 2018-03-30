@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=isoumount
+Comment=Unmount ISO files (and linuxfs file if it exists)
+Icon=preferences-desktop
+Exec=gksu /usr/local/bin/isoumount %f
+Type=Application
+Categories=System;

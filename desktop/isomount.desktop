@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=isomount
+Comment=Mount ISO file (and linuxfs file if it exists)
+Icon=preferences-desktop
+Exec=gksu /usr/local/bin/isomount %F
+Type=Application
+Categories=System;
