@@ -6,8 +6,9 @@ only one real script and the others are symlinks to it.
 
 What's new?
 -----------
-    isomount version 00.04.02 (Thu Mar 29 21:39:34 MDT 2018)
-         dfh version 00.04.02 (Thu Mar 29 21:38:39 MDT 2018
+
+    isomount version 00.04.03 (Thu Mar 29 23:05:35 MDT 2018)
+         dfh version 00.04.03 (Thu Mar 29 23:05:41 MDT 2018)
 
 * Add a --gui option to display results in yad
 
