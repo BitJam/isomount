@@ -326,6 +326,8 @@ do_sq_umount() {
 any_mount() {
     verbose "any_mount(%s)" "$bold_co$*$quest_co"
 
+   clean_mounts
+
     local name=$1  what=$2    where  n; shift 2
     [ -z "$what" ]  && fatal "Need to say what we should %s"   "$ME"
 
@@ -366,6 +368,9 @@ any_mount() {
 #------------------------------------------------------------------------------
 any_umount() {
     verbose "any_umount(%s)" "$bold_co$*$quest_co"
+
+    clean_mounts
+
     local name=$1  where=$2
     if [ "$where" == 'all' ]; then
         local mp i is_done
