@@ -22,6 +22,7 @@ rox-filer, you can drag from it.
 then we automatically use gui mode.  This was one of
 the tricks needed to work with gksu.  (((((sigh)))))
 
+* reorganized with bin/ and tools/ directories
 
 TLDR:
 -----
