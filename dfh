@@ -7,8 +7,8 @@
 # A fancy version of dfh.
 #------------------------------------------------------------------------------
 
-VERSION="00.03.01"
-VERSION_DATE="Thu Mar 29 17:35:53 MDT 2018"
+VERSION="00.04.02"
+VERSION_DATE="Thu Mar 29 21:38:39 MDT 2018"
 
 ME=${0##*/}
 
