@@ -505,7 +505,7 @@ show_mounts() {
 
     local w_type=${#lab_type}  w_size=${#lab_size}  w_mp=${#lab_mp} w_file=${#lab_file}
     while read dev type size used avail percent mp; do
-        [ ${#dev} -gt 0   ] || continue
+        [ ${#dev} -gt 0 ] || continue
         local file=$(loop_to_file $dev)
         [ $w_file -lt ${#file} ] && w_file=${#file}
         [ $w_type -lt ${#type} ] && w_type=${#type}
@@ -781,7 +781,7 @@ set_colors() {
         fname_co=$white      ;     m_co=$gray      ;     warn_co=$white      ; ;;
 
         *)
-            fatal "Unknown color parameter: %s" "$scheme"
+            fatal "Unknown color scheme: %s" "$scheme"
     esac
 }
 
