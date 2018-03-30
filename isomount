@@ -22,6 +22,7 @@ YAD_ERR_OPTS="--center --width=800 --height=300 --button=gtk-ok:0 "
 if test -r $YAD_IMAGE; then
     YAD_STD_OPTS="$YAD_STD_OPTS -image=$YAD_IMAGE"
     YAD_ERR_OPTS="$YAD_STD_OPTS -image=$YAD_IMAGE"
+fi
 
 SCREEN_WIDTH=$(stty size | cut -d" " -f2)
 #------------------------------------------------------------------------------
