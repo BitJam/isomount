@@ -14,7 +14,7 @@ What's new?
 * Add 4 desktop files that use gui mode. The ones for
 isomount and isoumount allow for drag-and-drop if they
 are displayed in rox-filer.  The spacefm desktop/pinboard
-doesn't work and the spacefm filar doesn't work but, like
+doesn't work and the spacefm filer doesn't work but, like
 rox-filer, you can drag from it.
 
 * Note: if "stty size" doesn't give us a non-zero width
