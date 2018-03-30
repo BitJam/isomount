@@ -63,6 +63,10 @@ Screen Shots
 
 ![isoumount unmounting](/images/dfh-01.png)
 
+### GUI mode
+
+![isoumount in gui mode](/images/isom-window-01.png)
+
 Quick Start
 -----------
 If you clone or copy this repo then you can use the utilities
