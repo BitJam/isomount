@@ -161,17 +161,16 @@ Example:
 
    umount /mnt/iso3
 
-The directory and the @ file will still remain but they
-will be removed then next time one of the scripts is called.
+The directory will still remain but it will be removed the next time
+one of the scripts is called is called that needs root.
 
-If you are not the root user and if you do not call a script that
-needs root privileges with sudo then the script uses "sudo" as
-needed.  If you don't have sudo on you system then just make sure
-you always call them as root.
+If you do not have root privileges and if you call a script that
+needs needs them then the script uses "sudo" as needed.  If you
+don't have sudo on you system then just make sure you always call
+them as root.
 
-This started as 36 lines of code that has worked well for me
-for many years. It has now blossomed to over 400 lines of
-code.  A number of my programs are like that.  The start
-with a core of under 50 lines (often much less) and then
-grow by a factor of 10 or more.  That's user friendliness
-for you.
+This started as 36 lines of code that has worked well for me for
+many years. It has now blossomed to over 400 lines of code.  A
+number of my programs are like that.  The start with a core of under
+50 lines (often much less) and then grow by a factor of 10 or more.
+That's user friendliness for you.
