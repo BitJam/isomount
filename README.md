@@ -49,7 +49,6 @@ TLDR:
 
     dfh
 
-
 Screen Shots
 ------------
 ### Mounting
@@ -67,7 +66,7 @@ Screen Shots
 
 ### GUI mode
 
-![isoumount in gui mode](/images/isom-window-01.png)
+![isoumount in gui mode](/images/isomount_031.png)
 
 Quick Start
 -----------
