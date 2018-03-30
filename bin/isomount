@@ -608,6 +608,7 @@ show_mounts_gui() {
 
         [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
 
+        text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g')
         my_yad $YAD_ERR_OPTS \
             --title "$ME"  \
             --text "$text"
@@ -623,7 +624,7 @@ show_mounts_gui() {
 
     [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
 
-    text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g') ; echo "$text"
+    text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g')
 
     device_info "$data" | my_yad $YAD_STD_OPTS \
         --title "$ME"        \
