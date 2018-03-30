@@ -5,6 +5,7 @@ VERSION_DATE="Thu Mar 29 23:05:35 MDT 2018"
 
 MY_NAME=${0##*/}
 ME=${ACTION:=$MY_NAME}
+ORIG_CMDLINE="$ME $*"
 
  MAX_DIRS=20
 
@@ -14,19 +15,24 @@ ME=${ACTION:=$MY_NAME}
   SQ_FILE="antiX/linuxfs"
 : ${HEADER_TYPE:=rev2}
 
-         YAD="/usr/bin/yad"
-   YAD_IMAGE="/usr/local/lib/antiX/antiX-logo.png"
-YAD_STD_OPTS="--center --width=900 --height=600 --button=gtk-ok:0 "
-YAD_ERR_OPTS="--center --width=800 --height=300 --button=gtk-ok:0 "
+# This prevents gtk2 themes from interfering with Pango colors
+export GTK2_RC_FILES=/usr/share/themes/Default/gtk-2.0-key/gtkrc
 
-if test -r $YAD_IMAGE; then
-    YAD_STD_OPTS="$YAD_STD_OPTS -image=$YAD_IMAGE"
-    YAD_ERR_OPTS="$YAD_ERR_OPTS -image=$YAD_IMAGE"
+
+         YAD="/usr/bin/yad"
+#   YAD_IMAGE="/usr/local/lib/antiX/antiX-logo.png"
+YAD_STD_OPTS="--center --width=900 --height=600 --button=gtk-ok:0"
+YAD_ERR_OPTS="--center --width=800 --height=300 --button=gtk-ok:0"
+
+if [ -n "$YAD_IMAGE" -a -r "$YAD_IMAGE" ]; then
+    YAD_STD_OPTS="$YAD_STD_OPTS --image=$YAD_IMAGE"
+    YAD_ERR_OPTS="$YAD_ERR_OPTS --image=$YAD_IMAGE"
 fi
 
+GUI_BOLD_FMT="<b><big>%s</big></b>"
 
 MAIN_NAME=$(basename "$(readlink -f "$0")")
-MOUNT_POINTS="mountpoints"
+MOUNT_POINTS=$"mountpoints"
 #------------------------------------------------------------------------------
 #
 #
@@ -487,7 +493,7 @@ say() {
 #
 #------------------------------------------------------------------------------
 verbose() {
-    [ "$BE_VERBOSE" ] || return
+    [ -z "$BE_VERBOSE" -o -n "$GUI_MODE" ] && return
     local fmt=$1 ; shift
     printf "$ME: $quest_co$fmt$nc_co\n" "$@"
 }
@@ -588,14 +594,20 @@ Show_Mounts
 show_mounts_gui() {
     local data=$1  text
 
+    local bold_actions=$(gui_bold $"Actions")
+    local  bold_no_mps=$(gui_bold "$no_mps")
+    local bold_iso_mps=$(gui_bold "$iso_mps")
+
     if [ -z "$data" ];  then
-    text=$(printF "There are no %%s" "$iso_mps")
+        local no_mps=$(printf $"There are no %s" "$iso_mps")
 
         if [ -z "$GUI_TEXT" ]; then
-            text=$(printf '\n[%s]' "$text")
+            text=$(printf '\n%s' "$bold_no_mps")
         else
-            text=$(printf '\n%s:\n%s\n\n[%s]' "Actions" "$GUI_TEXT" "$text")
+            text=$(printf '%s:\n%s\n' "$bold_actions" "$GUI_TEXT" "$bold_no_mps")
         fi
+
+        [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
 
         my_yad $YAD_ERR_OPTS \
             --title "$ME"  \
@@ -604,10 +616,15 @@ show_mounts_gui() {
     fi
 
     if [ -z "$GUI_TEXT" ]; then
-        text=$(printf "\n\n%s:" "$iso_mps")
+        text=$(printf '%s:' "$bold_iso_mps")
+
     else
-        text=$(printf "\n%s:\n%s\n\n%s:"  "Actions"  "$GUI_TEXT" "$iso_mps")
+        text=$(printf '%s:\n%s\n%s:'  "$bold_actions"  "$GUI_TEXT" "$bold_iso_mps")
     fi
+
+    [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
+
+    text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g') ; echo "$text"
 
     device_info "$data" | my_yad $YAD_STD_OPTS \
         --title "$ME"        \
