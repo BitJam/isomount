@@ -2,9 +2,6 @@ ROOT        := .
 
 SHELL       := /bin/bash
 
-SCRIPTS     := isomount isoumount sqmount squmount clean-isomount show-isomount
-# SCRIPTS     := $(addsuffix -gui, $(SCRIPTS))
-SCRIPTS     := $(SCRIPTS) dfh
 BIN_DIR     := $(ROOT)/usr/local/bin
 MAN_DIR     := $(ROOT)/usr/share/man/man1
 DESKTOP_DIR := $(ROOT)/usr/share/applications/antix
@@ -22,7 +19,7 @@ help:
 
 install: scripts man-pages desktop_files
 scripts: | $(BIN_DIR)
-	cp $(CP_OPTS) $(SCRIPTS) $(BIN_DIR)
+	cp $(CP_OPTS) bin/* $(BIN_DIR)
 
 man-pages: | $(MAN_DIR)
 	cp $(CP_OPTS) man/* $(MAN_DIR)
