@@ -130,6 +130,7 @@ Options
 The following options are available for all six commands.
 
     -c --color=<xxx>   set color scheme to off|low|low2|bw|dark|high
+    -g --gui           show output in a yad window
     -h --help          show this usage
     -H --header=<type>   change header color: norm, rev1, rev2, rev3
                                              (n,      r1,   r2,   r3)
