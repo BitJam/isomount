@@ -66,7 +66,7 @@ Screen Shots
 
 ### GUI mode
 
-![isoumount in gui mode](/images/isomount_031.png)
+![isoumount in gui mode](/images/isomount_032.png)
 
 Quick Start
 -----------
