@@ -595,16 +595,15 @@ show_mounts_gui() {
     local data=$1  text
 
     local bold_actions=$(gui_bold $"Actions")
-    local  bold_no_mps=$(gui_bold "$no_mps")
     local bold_iso_mps=$(gui_bold "$iso_mps")
 
     if [ -z "$data" ];  then
-        local no_mps=$(printf $"There are no %s" "$iso_mps")
+        local  bold_no_mps=$(gui_bold "$(printf $"There are no %s" "$iso_mps")")
 
         if [ -z "$GUI_TEXT" ]; then
             text=$(printf '\n%s' "$bold_no_mps")
         else
-            text=$(printf '%s:\n%s\n' "$bold_actions" "$GUI_TEXT" "$bold_no_mps")
+            text=$(printf '%s:\n%s\n%s' "$bold_actions" "$GUI_TEXT" "$bold_no_mps")
         fi
 
         [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
@@ -793,7 +792,6 @@ printN() {
     done
     printf "$fmt"
 }
-
 
 #------------------------------------------------------------------------------
 #
