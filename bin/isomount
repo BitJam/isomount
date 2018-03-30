@@ -224,7 +224,7 @@ eval_argument() {
 #
 #------------------------------------------------------------------------------
 main() {
-    local SHIFT  SHIFT_2  SHORT_STACK="HhQqsVv"
+    local SHIFT  SHIFT_2  SHORT_STACK="cgHhQqsVv"
     local NO_MPS  ONLY_MPS  BE_SILENT BE_VERBOSE  PARAM_CNT
     local GUI_TEXT SCREEN_WIDTH  NO_SCREEN
 
