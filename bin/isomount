@@ -21,10 +21,12 @@ YAD_ERR_OPTS="--center --width=800 --height=300 --button=gtk-ok:0 "
 
 if test -r $YAD_IMAGE; then
     YAD_STD_OPTS="$YAD_STD_OPTS -image=$YAD_IMAGE"
-    YAD_ERR_OPTS="$YAD_STD_OPTS -image=$YAD_IMAGE"
+    YAD_ERR_OPTS="$YAD_ERR_OPTS -image=$YAD_IMAGE"
 fi
 
-SCREEN_WIDTH=$(stty size | cut -d" " -f2)
+
+MAIN_NAME=$(basename "$(readlink -f "$0")")
+MOUNT_POINTS="mountpoints"
 #------------------------------------------------------------------------------
 #
 #
@@ -216,15 +218,18 @@ eval_argument() {
 #
 #------------------------------------------------------------------------------
 main() {
-    local SHIFT SHIFT_2  SHORT_STACK="HhQqsVv"
-    local NO_MPS ONLY_MPS  BE_SILENT BE_VERBOSE  PARAM_CNT
-    local GUI_TEXT
+    local SHIFT  SHIFT_2  SHORT_STACK="HhQqsVv"
+    local NO_MPS  ONLY_MPS  BE_SILENT BE_VERBOSE  PARAM_CNT
+    local GUI_TEXT SCREEN_WIDTH  NO_SCREEN
+
+    SCREEN_WIDTH=$(stty size | cut -d" " -f2)
+    [ -z "$SCREEN_WIDTH"  -o "$SCREEN_WIDTH" = 0 ] && NO_SCREEN=true
 
     set_colors
     read_all_cmdline_mingled "$@"
     shift $SHIFT_2
 
-    [ -z "$SCREEN_WIDTH"  -o "$SCREEN_WIDTH" = 0 ] && GUI_MODE=true
+    [ "$NO_SCREEN"] && GUI_MODE=true
 
     if [ "$GUI_MODE" ]; then
         set_colors gui
@@ -331,7 +336,7 @@ any_mount() {
     local name=$1  what=$2    where  n; shift 2
     [ -z "$what" ]  && fatal "Need to say what we should %s"   "$ME"
 
-    test -e "$what" || fatal "Can not find file: %s"           "$what"
+    test -e "$what" || fatal "Cannot find file: %s"            "$what"
     test -f "$what" || fatal "%s does not appear to be a file" "$what"
 
     if ! mountpoint -q "$MNT_DIR"; then
@@ -497,6 +502,7 @@ verbose() {
 #------------------------------------------------------------------------------
 show_mounts() {
     local data=$(df -ahT | grep -E " $MNT_DIR/($ISO_NAME|$SQ_NAME)[0-9]")
+    local iso_mps=$(printN "%1 %2" "$MAIN_NAME" "$MOUNT_POINTS")
 
     local lab_type="Type"
     local lab_file="File"
@@ -506,7 +512,10 @@ show_mounts() {
     local dev type size used avail percent mp file
     [ "$GUI_MODE" ] && show_mounts_gui "$data"
 
-    [ -z "$data" -o -n "$GUI_MODE" ] && return
+    if [ -z "$data" ]; then
+        say "[%s]" "$(printf "There are no %s" "iso_mps")"
+        return
+    fi
 
     local w_type=${#lab_type}  w_size=${#lab_size}  w_mp=${#lab_mp} w_file=${#lab_file}
     while read dev type size used avail percent mp; do
@@ -535,6 +544,7 @@ Show_Mounts
     fi
 
     printf "\n"
+    printf "%s:\n" "$iso_mps"
 
     local h_co=$head_co$rev_co hfmt hfmt1 hfmt1
     local h1=
@@ -576,10 +586,32 @@ Show_Mounts
 #
 #------------------------------------------------------------------------------
 show_mounts_gui() {
-    local data=$1
-    device_info "$data" | $YAD $YAD_STD_OPTS \
+    local data=$1  text
+
+    if [ -z "$data" ];  then
+    text=$(printF "There are no %%s" "$iso_mps")
+
+        if [ -z "$GUI_TEXT" ]; then
+            text=$(printf '\n[%s]' "$text")
+        else
+            text=$(printf '\n%s:\n%s\n\n[%s]' "Actions" "$GUI_TEXT" "$text")
+        fi
+
+        my_yad $YAD_ERR_OPTS \
+            --title "$ME"  \
+            --text "$text"
+        exit 0
+    fi
+
+    if [ -z "$GUI_TEXT" ]; then
+        text=$(printf "\n\n%s:" "$iso_mps")
+    else
+        text=$(printf "\n%s:\n%s\n\n%s:"  "Actions"  "$GUI_TEXT" "$iso_mps")
+    fi
+
+    device_info "$data" | my_yad $YAD_STD_OPTS \
         --title "$ME"        \
-        --text "$GUI_TEXT"   \
+        --text "$text"       \
         --list               \
         --column="$lab_file" \
         --column="$lab_type" \
@@ -590,17 +622,36 @@ show_mounts_gui() {
     exit 0
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 device_info() {
     local data="$1"
 
     while read dev type size used avail percent mp; do
         [ ${#dev} -gt 0   ] || continue
         file=$(loop_to_file $dev)
-        echo -e "$file\n$type\n$size\n$mp"
+        printf "$file\n$type\n$size\n$mp\n"
     done <<Device_Info
 $(echo "$data")
 Device_Info
 }
+
+#------------------------------------------------------------------------------
+# Call yad with the passed options.  If there is a screen available then
+# launch in the background. Otherwise launch in the forground so we don't
+# make gksu upset and any text won't be seen anyway so there is no harm
+# waiting for yad.
+#------------------------------------------------------------------------------
+my_yad() {
+    if [ "$NO_SCREEN" ]; then
+        $YAD "$@"
+    else
+        $YAD "$@" &
+    fi
+}
+
 
 #------------------------------------------------------------------------------
 #
@@ -608,7 +659,7 @@ Device_Info
 #------------------------------------------------------------------------------
 error_box() {
     local text=$(printf "\n\n%s\n\n" "$*")
-    $YAD $YAD_ERR_OPTS --title "$ME"  --text "$text"
+    my_yad $YAD_ERR_OPTS --title "$ME" --text "$text"
     exit 2
 }
 
@@ -706,6 +757,20 @@ clean_mounts() {
         done
     done
 }
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+printN() {
+    local param num=1  fmt=$1 ; shift
+    for param; do
+        fmt=${fmt//%$num/$param}
+        num=$((num + 1))
+    done
+    echo -ne "$fmt"
+}
+
 
 #------------------------------------------------------------------------------
 #
