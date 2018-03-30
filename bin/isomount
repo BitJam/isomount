@@ -791,7 +791,7 @@ printN() {
         fmt=${fmt//%$num/$param}
         num=$((num + 1))
     done
-    echo -ne "$fmt"
+    printf "$fmt"
 }
 
 
