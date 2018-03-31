@@ -550,7 +550,7 @@ Show_Mounts
     fi
 
     printf '\n'
-    printf '%s:\n' "$iso_mps"
+    printf '%s\n' "$iso_mps"
 
     local h_co=$head_co$rev_co hfmt hfmt1 hfmt1
     local h1=
@@ -603,7 +603,7 @@ show_mounts_gui() {
         if [ -z "$GUI_TEXT" ]; then
             text=$(printf '\n%s' "$bold_no_mps")
         else
-            text=$(printf '%s:\n%s\n%s' "$bold_actions" "$GUI_TEXT" "$bold_no_mps")
+            text=$(printf '%s\n%s\n%s' "$bold_actions" "$GUI_TEXT" "$bold_no_mps")
         fi
 
         [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
@@ -616,10 +616,10 @@ show_mounts_gui() {
     fi
 
     if [ -z "$GUI_TEXT" ]; then
-        text=$(printf '%s:' "$bold_iso_mps")
+        text=$(printf '%s' "$bold_iso_mps")
 
     else
-        text=$(printf '%s:\n%s\n%s:'  "$bold_actions"  "$GUI_TEXT" "$bold_iso_mps")
+        text=$(printf '%s\n%s\n%s'  "$bold_actions"  "$GUI_TEXT" "$bold_iso_mps")
     fi
 
     [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
