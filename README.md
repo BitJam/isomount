@@ -8,7 +8,9 @@ What's new?
 -----------
 
     isomount version 00.04.05 (Fri Mar 30 15:29:34 MDT 2018)
-         dfh version 00.04.03 (Thu Mar 29 23:05:41 MDT 2018)
+         dfh version 00.04.04 (Sat Mar 31 10:12:53 MDT 2018)
+
+* fix minor (typo) bug in dfh
 
 * Spruce up the gui windows in isomount suite (not dfh)
 
