@@ -33,6 +33,12 @@ GUI_BOLD_FMT='<span color="#0000C0" font_weight="bold" size="larger">%s</span>'
 
 MAIN_NAME=$(basename "$(readlink -f "$0")")
 MOUNT_POINTS=$"mountpoints"
+
+MIN_DEV_WIDTH=12
+
+EXCLUDE_FS_TYPES="tmpfs devtmpfs rootfs proc devpts sysfs mqueue securityfs debugfs
+                  fusectl pstore cgroup binfmt_misc hugetlbfs"
+
 #------------------------------------------------------------------------------
 #
 #
@@ -138,6 +144,30 @@ ${bold_co}Options:$nc_co
 Usage
 }
 
+dfh_usage() {
+
+cat << Usage
+${bold_co}Usage: ${m_co}$ME [options]${nc_co}
+
+List "interesting" mounted file systems for humans.  Display in color and
+show the back-files for loop devices.
+
+${bold_co}Options:$nc_co
+    $m_co-c --color=<xxx>    $nc_co set color scheme to: off|low|low2|bw|dark|high
+    $m_co-g --gui            $nc_co show output in a yad window
+    $m_co-h --help           $nc_co show this usage
+    $m_co-H --header=<type>  $nc_co change header look: norm, rev1, rev2, rev3
+                                             (n,      r1,   r2,   r3)
+
+    $m_co-v --version        $nc_co show version number and exit
+
+    $m_co-x, --exclude-type=<xxx> $nc_co list of more file types to exclude
+                              (comma delimited)
+Usage
+    exit 0
+}
+
+
 #------------------------------------------------------------------------------
 #
 #
@@ -155,13 +185,14 @@ usage() {
         sq_umount_usage    ; echo
         clean_usage        ; echo
         show_mounts_usage  ; echo
-
+        dfh_usage          ; echo
         DONT_SHOW_OPTS=
         opt_usage
         exit 0
     fi
 
     case $ME in
+                  dfh) dfh_usage           ;;
              isomount) iso_mount_usage     ;;
               sqmount) sq_mount_usage      ;;
             isoumount) iso_umount_usage    ;;
@@ -181,9 +212,10 @@ usage() {
 #------------------------------------------------------------------------------
 takes_param() {
     case $1 in
-        -color|c) return 0 ;;
-       -header|H) return 0 ;;
-               *) return 1 ;;
+            -color|c) return 0 ;;
+           -header|H) return 0 ;;
+     -exclude-type|x) return 0 ;;
+                   *) return 1 ;;
     esac
 }
 
@@ -202,6 +234,13 @@ assign_parameter() {
 #------------------------------------------------------------------------------
 eval_argument() {
     local arg=$1  val=$2
+
+    case $ME in
+        dfh) case $arg in
+                -exclude-type|x)  USER_EXCLUDES="$USER_EXCLUDES ${val//,/ }" ; return ;;
+             esac
+    esac
+
     case $arg in
          -color|c)  COLOR_SCHEME=$val   ;;
          -color=*)  COLOR_SCHEME=$val   ;;
@@ -224,7 +263,7 @@ eval_argument() {
 #
 #------------------------------------------------------------------------------
 main() {
-    local SHIFT  SHIFT_2  SHORT_STACK="cgHhQqsVv"
+    local SHIFT  SHIFT_2  SHORT_STACK="cegHhQqsVv"
     local NO_MPS  ONLY_MPS  BE_SILENT BE_VERBOSE  PARAM_CNT
     local GUI_TEXT SCREEN_WIDTH  NO_SCREEN
 
@@ -250,6 +289,7 @@ main() {
     esac
 
     case $base in
+                  dfh)   ;;
              isomount)   ;;
               sqmount)   ;;
             isoumount)   ;;
@@ -271,6 +311,7 @@ main() {
     [ $PARAM_CNT -lt $min_param ] && usage
     [ $PARAM_CNT -gt $max_param ] && fatal $"Too many command line parameters"
     case $base in
+                  dfh)  do_dfh                              ;;
              isomount)  do_iso_mount  "$CMD_CMDS"           ;;
               sqmount)  do_sq_mount   "$CMD_CMDS"           ;;
             isoumount)  do_iso_umount "$CMD_CMDS"           ;;
@@ -447,6 +488,144 @@ do_umount() {
 	$SUDO rmdir   "$where" || fatal $"Failed to remove %s directory" "$where"
 
     say_unmounted "$where" "$what"
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+do_dfh() {
+    local exclude_list=$(echo $EXCLUDE_FS_TYPES $USER_EXCLUDES | sed -r "s/\s+/ -x /g")
+    local data=$(df -ahT -x $exclude_list | tail -n+2)
+
+    #echo "$data"
+    #echo
+
+    local lab_dev="File/Device"
+    local lab_type="Type"
+    local lab_size="Size"
+    local lab_used="Used"
+    local lab_avail="Avail"
+    local lab_cent="Use%"
+    local lab_mp="Mounted on"
+
+    [ "$GUI_MODE" ] && do_dfh_gui "$data"
+
+    local w_dev=$(losetup --list --noheadings -O back-file |  awk '{print length}' | sort -r  | head -n1)
+    [ ${w_dev:-0} -lt ${#lab_dev} ] && w_dev=${#lab_dev}
+
+    # Find max width of all the fields
+    local dev type size used avail cent mp
+    local w_type=${#lab_type}  w_size=${#lab_size} w_used=${#lab_used} w_avail=${#lab_avail} w_cent=${#lab_cent} w_mp=${#lab_mp}
+    while read dev type size used avail cent mp; do
+        [ ${#dev}  -gt 0         ] || continue
+        [ $w_dev   -lt ${#dev}   ] && w_dev=${#dev}
+        [ $w_type  -lt ${#type}  ] && w_type=${#type}
+        [ $w_size  -lt ${#size}  ] && w_size=${#size}
+        [ $w_used  -lt ${#used}  ] && w_used=${#used}
+        [ $w_avail -lt ${#avail} ] && w_avail=${#avail}
+        [ $w_cent  -lt ${#cent}  ] && w_cent=${#cent}
+        [ $w_mp    -lt ${#mp}    ] && w_mp=${#mp}
+    done <<Dfh_Loop1
+$(echo "$data" | tail -n+2)
+Dfh_Loop1
+
+    local truncate=$((w_dev + w_type + w_size + w_used + w_avail + w_cent + w_mp - SCREEN_WIDTH + 12))
+    if [ $truncate -gt 0 ]; then
+        w_dev=$((w_dev - truncate))
+        [ $w_dev -lt $MIN_DEV_WIDTH ] && fatal "The screen appears to be way too narrow!"
+    fi
+
+    local h_co=$head_co$rev_co hfmt hfmt1 hfmt1
+    local h1=
+    case $HEADER_TYPE in norm|n) h_co=$head_co  ;; esac
+
+    hfmt1="$h_co%-${w_dev}s  %-${w_type}s  %${w_size}s  %${w_used}s  %${w_avail}s  %${w_cent}s  %-${w_mp}s$nc_co\n"
+    hfmt2="$h_co%-${w_dev}s$nc_co  $h_co%-${w_type}s$nc_co  $h_co%${w_size}s$nc_co  $h_co%${w_used}s$nc_co  $h_co%${w_avail}s$nc_co  $h_co%${w_cent}s$nc_co  $h_co%-${w_mp}s$nc_co\n"
+
+    hfmt=$hfmt1
+    case $HEADER_TYPE in
+          rev2|r2) hfmt=$hfmt2 ;;
+    esac
+
+    case $HEADER_TYPE in
+        rev3|r3)
+            printf "$h_co%s  "   "$(rpad $w_dev   "$lab_dev$nc_co"   )"
+            printf "$h_co%s  "   "$(rpad $w_type  "$lab_type$nc_co"  )"
+            printf "$h_co%s  "   "$(lpad $w_size  "$lab_size$nc_co"  )"
+            printf "$h_co%s  "   "$(lpad $w_used  "$lab_used$nc_co"  )"
+            printf "$h_co%s  "   "$(lpad $w_avail "$lab_avail$nc_co" )"
+            printf "$h_co%s  "   "$(rpad $w_cent  "$lab_cent$nc_co"  )"
+            printf "$h_co%s\n"   "$lab_mp$nc_co"  ;;
+        *)
+            printf "$hfmt" "$lab_dev"  "$lab_type" "$lab_size" "$lab_used" "$lab_avail" "$lab_cent" "$lab_mp" ;;
+    esac
+
+    while read dev type size used avail cent mp; do
+        [ ${#dev} -gt 0   ] || continue
+        local type_co=$warn_co
+        if echo "$dev" | grep -q "^/dev/loop[0-9]" ; then
+            used=-
+            avail=-
+            cent=-
+            local file=$(loop_to_file $dev)
+            [ -n "$file" ] && dev=$file
+
+            case $type in
+                  iso9660) type_co=$purple    ;;
+                 squashfs) type_co=$quest_co ;;
+                     udf)  type_co=$quit_co  ;;
+            esac
+        fi
+        dev=$(my_truncate "$w_dev" "$dev")
+
+        local fmt="$m_co%-${w_dev}s  $type_co%-${w_type}s  $num_co%${w_size}s$nc_co  %${w_used}s  %${w_avail}s  %${w_cent}s  $m_co%-s$nc_co\n"
+        printf "$fmt" "$dev" "$type" "$size" "$used" "$avail" "$cent" "$mp"
+    done <<Dfh_Loop2
+$(echo "$data" | tail -n+2)
+Dfh_Loop2
+
+    exit 0
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+do_dfh_gui() {
+    local data=$1
+    dfh_device_info "$data" | my_yad $YAD_STD_OPTS \
+        --title "$ME"         \
+        --text "$GUI_TEXT"    \
+        --list                \
+        --column="$lab_dev"   \
+        --column="$lab_type"  \
+        --column="$lab_size"  \
+        --column="$lab_used"  \
+        --column="$lab_avail" \
+        --column="$lab_cent"  \
+        --column="$lab_mp"
+        #2>/dev/null
+
+    exit 0
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+dfh_device_info() {
+    local data="$1" file
+
+    while read dev type size used avail cent mp; do
+        [ ${#dev} -gt 0   ] || continue
+        file=$(loop_to_file $dev)
+        [ -n "$file" ] && dev=$file
+
+        echo -e "$dev\n$type\n$size\n$used\n$avail\n$cent\n$mp"
+    done <<Device_Info
+$(echo "$data")
+Device_Info
 }
 
 #------------------------------------------------------------------------------
