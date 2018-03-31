@@ -243,7 +243,7 @@ show_mounts_gui() {
 #
 #------------------------------------------------------------------------------
 device_info() {
-    locaAl data="$1" file
+    local data="$1" file
 
     while read dev type size used avail cent mp; do
         [ ${#dev} -gt 0   ] || continue
