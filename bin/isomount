@@ -534,8 +534,8 @@ Dfh_Loop1
         [ $w_dev -lt $MIN_DEV_WIDTH ] && fatal "The screen appears to be way too narrow!"
     fi
 
-    local h_co=$head_co$rev_co hfmt hfmt1 hfmt1
-    local h1=
+    local hi h_co=$head_co$rev_co hfmt hfmt1 hfmt1
+
     case $HEADER_TYPE in norm|n) h_co=$head_co  ;; esac
 
     hfmt1="$h_co%-${w_dev}s  %-${w_type}s  %${w_size}s  %${w_used}s  %${w_avail}s  %${w_cent}s  %-${w_mp}s$nc_co\n"
@@ -730,8 +730,7 @@ Show_Mounts
     printf '\n'
     printf '%s\n' "$iso_mps"
 
-    local  hfmt hfmt1 hfmt1
-    local h1=
+    local  hi  hfmt hfmt1 hfmt1
 
     hfmt1="$h_co%-${w_file}s  %-${w_type}s  %${w_size}s  %-${w_mp}s$nc_co\n"
     hfmt2="$h_co%-${w_file}s$nc_co  $h_co%-${w_type}s$nc_co  $h_co%${w_size}s$nc_co  $h_co%-${w_mp}s$nc_co\n"
