@@ -29,7 +29,7 @@ if [ -n "$YAD_IMAGE" -a -r "$YAD_IMAGE" ]; then
     YAD_ERR_OPTS="$YAD_ERR_OPTS --image=$YAD_IMAGE"
 fi
 
-GUI_BOLD_FMT="<b><big>%s</big></b>"
+GUI_BOLD_FMT='<span color="#0000C0" font_weight="bold" size="larger">%s</span>'
 
 MAIN_NAME=$(basename "$(readlink -f "$0")")
 MOUNT_POINTS=$"mountpoints"
