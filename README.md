@@ -61,7 +61,7 @@ Screen Shots
 ### Unmounting
 
 
-![isoumount unmounting](/images/isoumount-02.png)
+![isoumount unmounting](/images/isoumount-03.png)
 
 ### dfh output
 
