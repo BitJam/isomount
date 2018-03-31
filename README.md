@@ -7,8 +7,9 @@ only one real script and the others are symlinks to it.
 What's new?
 -----------
 
-    isomount version 00.04.05 (Fri Mar 30 15:29:34 MDT 2018)
-         dfh version 00.04.04 (Sat Mar 31 10:12:53 MDT 2018)
+    isomount version 00.05.00 (Sat Mar 31 11:18:49 MDT 2018)
+
+* (00.05.00) merge dfh code into isomount!
 
 * fix minor (typo) bug in dfh
 
