@@ -694,8 +694,11 @@ show_mounts() {
     local dev type size used avail percent mp file
     [ "$GUI_MODE" ] && show_mounts_gui "$data"
 
+    local h_co=$head_co$rev_co
+    case $HEADER_TYPE in norm|n) h_co=$head_co  ;; esac
+
     if [ -z "$data" ]; then
-        say '[%s]' "$(printf $"There are no %s" "$iso_mps")"
+        say '[%s]' "$h_co$(printf $"There are no %s" "$iso_mps")$nc_co$m_co"
         return
     fi
 
@@ -727,9 +730,8 @@ Show_Mounts
     printf '\n'
     printf '%s\n' "$iso_mps"
 
-    local h_co=$head_co$rev_co hfmt hfmt1 hfmt1
+    local  hfmt hfmt1 hfmt1
     local h1=
-    case $HEADER_TYPE in norm|n) h_co=$head_co  ;; esac
 
     hfmt1="$h_co%-${w_file}s  %-${w_type}s  %${w_size}s  %-${w_mp}s$nc_co\n"
     hfmt2="$h_co%-${w_file}s$nc_co  $h_co%-${w_type}s$nc_co  $h_co%${w_size}s$nc_co  $h_co%-${w_mp}s$nc_co\n"
