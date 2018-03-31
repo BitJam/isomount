@@ -118,7 +118,7 @@ Usage
 #
 #
 #------------------------------------------------------------------------------
-show_nounts_usage() {
+show_mounts_usage() {
     cat <<Usage
 ${bold_co}Usage:${m_co} $ME [options]${nc_co}
     Show the currently mounted iso and squashfs files
