@@ -28,7 +28,20 @@ if [ -n "$YAD_IMAGE" -a -r "$YAD_IMAGE" ]; then
     YAD_ERR_OPTS="$YAD_ERR_OPTS --image=$YAD_IMAGE"
 fi
 
+# Constants for scaling size of yad window
+YAD_H_TEXT_PPC=16
+YAD_H_TEXT_OFF=10
+YAD_H_DATA_PPC=23
+YAD_H_DATA_OFF=140
+
+YAD_W_TEXT_PPC=640    # divided by 100
+YAD_W_TEXT_OFF=50
+YAD_W_DATA_PPC=640    # divided by 100
+YAD_W_DATA_OFF=60
+
+
 GUI_BOLD_FMT='<span color="#0000C0" font_weight="bold" size="larger">%s</span>'
+GUI_BOLD_FMT='<span color="#0000C0" font_weight="bold">%s</span>'
 
 MAIN_NAME=$(basename "$(readlink -f "$0")")
 MOUNT_POINTS=$"mountpoints"
@@ -686,6 +699,7 @@ show_mounts() {
     local data=$(df -ahT | grep -E " $MNT_DIR/($ISO_NAME|$SQ_NAME)[0-9]")
     local iso_mps=$(printN "%1 %2" "$MAIN_NAME" "$MOUNT_POINTS")
 
+
     local lab_type="Type"
     local lab_file="File"
     local lab_size="Size"
@@ -768,11 +782,11 @@ Show_Mounts
 #
 #------------------------------------------------------------------------------
 show_mounts_gui() {
-    local data=$1  text
-
+    local data=$1  text yad_w  yad_h
+    local dpi=$(get_dpi)
     local bold_actions=$(gui_bold $"Actions")
     local bold_iso_mps=$(gui_bold "$iso_mps")
-
+    #-jbb data=
     if [ -z "$data" ];  then
         local  bold_no_mps=$(gui_bold "$(printf $"There are no %s" "$iso_mps")")
 
@@ -785,9 +799,16 @@ show_mounts_gui() {
         [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
 
         text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g')
-        my_yad $YAD_ERR_OPTS \
-            --title "$ME"  \
-            --text "$text"
+        #-jbb text="hello world"
+        #-jbb text="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx x x x xxxxxxxxxxx xxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxx xxxxx xxx"
+        yad_w=$(scale_yad_width  "$dpi" "$text" "$data")
+        yad_h=$(scale_yad_height "$dpi" "$text" "$data")
+
+        my_yad $YAD_ERR_OPTS   \
+            --title  "$ME"     \
+            --text   "$text"   \
+            --width  "$yad_w"  \
+            --height "$yad_h"
         exit 0
     fi
 
@@ -802,9 +823,23 @@ show_mounts_gui() {
 
     text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g')
 
+    debug1 "dpi" "$dpi"
+    debug1 "lines" "$(echo "$data$text" | wc -l)"
+
+    text=
+    #-jbb text="hello world"
+    yad_w=$(scale_yad_width  "$dpi" "$text" "$data")
+    yad_h=$(scale_yad_height "$dpi" "$text" "$data")
+
+    debug1 "width" "$yad_w"
+    debug1 "height" "$yad_h"
+
+
     device_info "$data" | my_yad $YAD_STD_OPTS \
         --title "$ME"        \
         --text "$text"       \
+        --width "$yad_w"     \
+        --height "$yad_h"    \
         --list               \
         --column="$lab_file" \
         --column="$lab_type" \
@@ -820,15 +855,49 @@ show_mounts_gui() {
 #
 #------------------------------------------------------------------------------
 device_info() {
-    local data="$1"
+    local data=$1
 
+    local dev type size used avail percent mp file
     while read dev type size used avail percent mp; do
         [ ${#dev} -gt 0   ] || continue
         file=$(loop_to_file $dev)
+        #file=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        #size=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        #type=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        #file=
+        #size=
+        #type=
         printf "$file\n$type\n$size\n$mp\n"
     done <<Device_Info
 $(echo "$data")
 Device_Info
+}
+
+#------------------------------------------------------------------------------
+# Get the combined maximum width of colums.  Â
+#------------------------------------------------------------------------------
+data_width() {
+    local data=$1
+    local w_type=${#lab_type}  w_size=${#lab_size}  w_mp=${#lab_mp} w_file=${#lab_file}
+    local dev type size used avail cent mp file
+    while read dev type size used avail cent mp; do
+        [ ${#dev} -gt 0 ] || continue
+        file=$(loop_to_file $dev)
+        #file=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        #size=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        #type=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        #file=
+        #size=
+        #type=
+        [ $w_file -lt ${#file} ] && w_file=${#file}
+        [ $w_type -lt ${#type} ] && w_type=${#type}
+        [ $w_size -lt ${#size} ] && w_size=${#size}
+        [ $w_mp -lt ${#mp} ]     && w_mp=${#mp}
+    done <<Show_Mounts
+$(echo "$data")
+Show_Mounts
+
+    printf "%s" $((w_file + w_type + w_size + w_mp + 4))
 }
 
 #------------------------------------------------------------------------------
@@ -1142,5 +1211,87 @@ show_version() {
     [ $# -gt 0 ]  && exit 0
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+get_dpi() {
+    local dpi
+    dpi=$(xrdb -query | grep 's/^[:space:]*Xft.dpi:[:space:]+' | awk '{print $2 }')
+    [ -z "$dpi" ] && dpi=$(xdpyinfo | grep '^[:space:]*resolution:' | tail -n1 | awk '{print $2}' | sed 's/x.*//')
+    printf "%s" "$dpi"
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+scale_yad_width() {
+    local dpi=$1  text=$(echo -e "$2" | sed 's/<[^>]*>//g')  data=$3
+    local t_width=0  d_width=0
+
+    if [ -n "$text" ]; then
+        local t_chars=$(max_line_len "$text")
+        debug1 "t_chars" "$t_chars"
+        local t_width=$((YAD_W_TEXT_OFF + YAD_W_TEXT_PPC * dpi * t_chars / 96 / 100))
+    fi
+
+    if [ -n "$data" ]; then
+        #local d_chars=$(max_line_len "$data")
+        local d_chars=$(data_width "$data")
+        debug1 "d_chars" "$d_chars"
+        local d_width=$((YAD_W_DATA_OFF + YAD_W_DATA_PPC * dpi * d_chars / 96 / 100))
+    fi
+
+    if [ $t_width -gt $d_width ]; then
+        printf "%s" "$t_width"
+    else
+        printf "%s" "$d_width"
+    fi
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+scale_yad_height() {
+    local dpi=$1  text=$2  data=$3  t_height=0  d_height=0
+    if [ -n "$text" ]; then
+        local t_lines=$(count_lines "$text")
+        debug1 "t_lines" "$t_lines"
+        local t_height=$((YAD_H_TEXT_OFF + YAD_H_TEXT_PPC * dpi * t_lines / 96))
+    fi
+
+    if [ -n "$data" ]; then
+        local d_lines=$(count_lines "$data")
+        debug1 "d_lines" "$d_lines"
+        local d_height=$((YAD_H_DATA_OFF + YAD_H_DATA_PPC * dpi * d_lines / 96))
+    fi
+
+    debug1 "t_height" "$t_height"
+    debug1 "d_height" "$d_height"
+    printf "%s" $((t_height + d_height))
+}
+
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+old_scale_yad_height() {
+    local dpi=$1  data=$2
+    local chars=$(echo -e "$data" | wc -l)
+    printf "%s" $((YAD_H_PIXELS_OFF + YAD_H_PIXELS_PER_CHAR * dpi * chars / 96))
+}
+
+count_lines() { echo "$1" | wc -l ;}
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+max_line_len() {
+    local data=$1
+    printf "%s" "$data" | awk '{print length}' | sort -nr | head -n1
+}
 
 main "$@"
