@@ -37,6 +37,8 @@ YAD_H_DATA_OFF=140
 YAD_W_TEXT_PPC=640    # divided by 100
 YAD_W_TEXT_OFF=50
 YAD_W_DATA_PPC=640    # divided by 100
+YAD_W_DATA_PPC=680    # divided by 100 @ 96
+YAD_W_DATA_PPC=680    # divided by 100
 YAD_W_DATA_OFF=60
 
 
