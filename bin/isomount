@@ -973,7 +973,7 @@ loop_to_file() {
 #------------------------------------------------------------------------------
 files_to_loops_to_mps() {
     local where=$1
-    for loop_dev in $(losetup -ln -O name,back-file | grep -E "^[^\s]+ +$where/" | sed 's/ .*//'); do
+    for loop_dev in $(losetup -ln -O name,back-file | grep -E "^[^[:space:]]+ +$where/" | sed 's/ .*//'); do
         df -a | grep "^$loop_dev " | awk '{print $6 }'
     done
 }
