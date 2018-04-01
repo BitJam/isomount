@@ -803,6 +803,7 @@ Show_Mounts
 show_mounts_gui() {
     local data=$1  text yad_w  yad_h
     local dpi=$(get_dpi)
+    debug1 "dpi-0" "$dpi"
     local bold_actions=$(gui_bold $"Actions")
     local bold_iso_mps=$(gui_bold "$iso_mps")
     #-jbb data=
@@ -842,7 +843,6 @@ show_mounts_gui() {
 
     text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g')
 
-    debug1 "dpi" "$dpi"
     debug1 "lines" "$(echo "$data$text" | wc -l)"
 
     text=
