@@ -1236,9 +1236,11 @@ show_version() {
 #------------------------------------------------------------------------------
 get_dpi() {
     local dpi
-    dpi=$(xrdb -query | grep 's/^[:space:]*Xft.dpi:[:space:]+' | awk '{print $2 }')
-    [ -z "$dpi" ] && dpi=$(xdpyinfo | grep '^[:space:]*resolution:' | tail -n1 | awk '{print $2}' | sed 's/x.*//')
+    dpi=$(xrdb -query | grep '^[[:space:]]*Xft.dpi:' | awk '{print $2 }' | head -n1)
+    debug1 dpi-1 "$dpi"
+    [ -z "$dpi" ] && dpi=$(xdpyinfo | grep '^[[:space:]]*resolution:' | tail -n1 | awk '{print $2}' | sed 's/x.*//')
     printf "%s" "$dpi"
+    debug1 dpi-2 "$dpi"
 }
 
 #------------------------------------------------------------------------------
@@ -1248,7 +1250,6 @@ get_dpi() {
 scale_yad_width() {
     local dpi=$1  text=$(echo -e "$2" | sed 's/<[^>]*>//g')  data=$3
     local t_width=0  d_width=0
-
     if [ -n "$text" ]; then
         local t_chars=$(max_line_len "$text")
         debug1 "t_chars" "$t_chars"
