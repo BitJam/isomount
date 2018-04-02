@@ -838,7 +838,7 @@ show_mounts_gui() {
         else
             text=$(printf '%s\n%s\n%s' "$bold_actions" "$GUI_TEXT" "$bold_no_mps")
         fi
-
+        [ "$DO_DEBUG" ] && text="dpi: $dpi   rows: $(echo "$data" | wc -l)\n$text"
         [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
 
         text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g')
@@ -862,23 +862,24 @@ show_mounts_gui() {
         text=$(printf '%s\n%s\n%s'  "$bold_actions"  "$GUI_TEXT" "$bold_iso_mps")
     fi
 
+    [ "$DO_DEBUG" ] && text="dpi: $dpi   rows: $(echo "$data" | wc -l)\n$text"
     [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
 
     text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g')
 
     debug1 "lines" "$(echo "$data$text" | wc -l)"
 
-    text=
-    #-jbb text="hello world"
+    #text=
     yad_w=$(scale_yad_width  "$dpi" "$text" "$data")
     yad_h=$(scale_yad_height "$dpi" "$text" "$data")
 
     debug1 "width" "$yad_w"
     debug1 "height" "$yad_h"
 
-
+    local title=$ME
+    [ "$DO_DEBUG" ] && title="$ME @ $dpi rows $(echo "$data" | wc -l)"
     device_info "$data" | my_yad $YAD_STD_OPTS \
-        --title "$ME"        \
+        --title "$title"     \
         --text "$text"       \
         --width "$yad_w"     \
         --height "$yad_h"    \
@@ -1260,10 +1261,8 @@ show_version() {
 get_dpi() {
     local dpi
     dpi=$(xrdb -query | grep '^[[:space:]]*Xft.dpi:' | awk '{print $2 }' | head -n1)
-    debug1 dpi-1 "$dpi"
     [ -z "$dpi" ] && dpi=$(xdpyinfo | grep '^[[:space:]]*resolution:' | tail -n1 | awk '{print $2}' | sed 's/x.*//')
     printf "%s" "$dpi"
-    debug1 dpi-2 "$dpi"
 }
 
 #------------------------------------------------------------------------------
