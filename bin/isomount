@@ -60,12 +60,14 @@ EXCLUDE_FS_TYPES="tmpfs devtmpfs rootfs proc devpts sysfs mqueue securityfs debu
                   fusectl pstore cgroup binfmt_misc hugetlbfs"
 
 #------------------------------------------------------------------------------
-#
-#
+# Only use the "sudo" command (where needed) if we are not root.
 #------------------------------------------------------------------------------
 SUDO="sudo"
 [ $UID -eq 0 ] && SUDO=
 
+#------------------------------------------------------------------------------
+# Usage text for the isomount command.
+#------------------------------------------------------------------------------
 iso_mount_usage() {
     local fname=$MNT_DIR/${ISO_NAME}1
     cat <<Usage
@@ -77,8 +79,7 @@ Usage
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# Display sqmount usage.
 #------------------------------------------------------------------------------
 sq_mount_usage() {
     local fname=$MNT_DIR/${SQ_NAME}1
@@ -90,8 +91,7 @@ Usage
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# display isoumount usage.
 #------------------------------------------------------------------------------
 iso_umount_usage() {
     local fname=$MNT_DIR/${ISO_NAME}N
@@ -106,8 +106,7 @@ Usage
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# Display squmount usage.
 #------------------------------------------------------------------------------
 sq_umount_usage() {
     local fname=$MNT_DIR/${SQ_NAME}N
@@ -123,8 +122,7 @@ Usage
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# Display clean-isomount usage.
 #------------------------------------------------------------------------------
 clean_usage() {
     cat <<Usage
@@ -135,8 +133,7 @@ Usage
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# Display show-isomount usage.
 #------------------------------------------------------------------------------
 show_mounts_usage() {
     cat <<Usage
@@ -146,6 +143,10 @@ Usage
     opt_usage
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 opt_usage() {
     [ "$DONT_SHOW_OPTS" ] && return
     cat <<Usage
@@ -165,9 +166,13 @@ ${bold_co}Options:$nc_co
 Usage
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 dfh_usage() {
 
-cat << Usage
+    cat << Usage
 ${bold_co}Usage: ${m_co}$ME [options]${nc_co}
 
 List "interesting" mounted file systems for humans.  Display in color and
@@ -648,8 +653,7 @@ do_dfh_gui() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# This makes creating the dfh table really easy.  See comment for device_info.
 #------------------------------------------------------------------------------
 dfh_device_info() {
     local data="$1" file
@@ -679,8 +683,9 @@ say_unmounted() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# Print out the printf format and args to stderr and then exit with a error
+# exit code.  Disabled in silent-mode.   In gui-mode we pop up a little
+# yad box with the message in addition to printing it out.
 #------------------------------------------------------------------------------
 fatal() {
     local fmt=$1 ; shift
@@ -692,8 +697,8 @@ fatal() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# Used for standard messages to the screen. Disabled in quiet-mode.  If we
+# are in gui-mode then we append the text to GUI_TEXT for later display.
 #------------------------------------------------------------------------------
 say() {
     local fmt=$1 ; shift
@@ -704,8 +709,7 @@ say() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# If we are in debug-mode the print out the passed in printf format and args.
 #------------------------------------------------------------------------------
 debug() {
     local fmt=$1 ; shift
@@ -713,6 +717,10 @@ debug() {
     printf "D: $fmt\n" "$@" >&2
 }
 
+#------------------------------------------------------------------------------
+# Used for printing out one variable name and value when we are in debug-mode.
+# This way things line up in nice columns.
+#------------------------------------------------------------------------------
 debug1() {
     [ "$DO_DEBUG" ] || return
     printf "D: %10s: %5s\n" "$@" >&2
@@ -720,8 +728,8 @@ debug1() {
 
 
 #------------------------------------------------------------------------------
-#
-#
+# The passed printf format and parameters are printed only if we are in
+# verbose-mode and not in gui-mode.
 #------------------------------------------------------------------------------
 verbose() {
     [ -z "$BE_VERBOSE" -o -n "$GUI_MODE" ] && return
@@ -827,8 +835,9 @@ Show_Mounts
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# This creates a yad window containing the GUI_TEXT and the data for the
+# mount-point table that is generated elsewhere.  We also allow an optional
+# w_all which will override us trying to calculate the width of the table.
 #------------------------------------------------------------------------------
 show_mounts_gui() {
     local data=$1  w_all=$2  text yad_w  yad_h
@@ -901,8 +910,9 @@ show_mounts_gui() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# This makes creating a table in yad pretty easy.  Since we don't read the
+# filename directly, we should be ok with spaces there.  Spaces in the other
+# fields would break things but I don't think there ever are.
 #------------------------------------------------------------------------------
 device_info() {
     local data=$1
@@ -965,16 +975,15 @@ my_yad() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
+#  Surround the given text with the Pengo markup we use for bold text in yad.
 #------------------------------------------------------------------------------
-gui_bold() {
-    printf "$GUI_BOLD_FMT" "$*"
-}
+gui_bold() { printf "$GUI_BOLD_FMT" "$*" ;}
 
 #------------------------------------------------------------------------------
-#
-#
+# Create a small yad box with an error message and then exit with an error
+# exit status.
+# We try to avoid saying "ERROR!!!" because those can be real annoying and
+# make people feel like they've done wrong.
 #------------------------------------------------------------------------------
 error_box() {
     local text=$(printf '\n\n%s\n\n' "$*")
@@ -1013,7 +1022,7 @@ files_to_loops_to_mps() {
 
 #------------------------------------------------------------------------------
 #  If str is longer than max, truncate beginning of str three spaces less than
-#  max and prepend "..." to indicate truncation has happened?
+#  max and prepend "..." to indicate truncation has happened
 #------------------------------------------------------------------------------
 my_truncate() {
     local max=$1  str=$2  len=${#2}
@@ -1026,6 +1035,10 @@ my_truncate() {
     printf '...%s\n' "${str:$offset:$len}"
 }
 
+#------------------------------------------------------------------------------
+#  Get the string length by stripping out ANSI escapes and the padding the
+#  string on the left.
+#------------------------------------------------------------------------------
 lpad() {
     local width=$1  str=$2
     local len=$(echo $str | sed -r 's/\x1B\[[0-9;]+[mKC]//g' | wc -m)
@@ -1037,6 +1050,10 @@ lpad() {
     printf "%$((width - len + 1))s%s" '' "$str"
 }
 
+#------------------------------------------------------------------------------
+#  Get the string length by stripping out ANSI escapes and the padding the
+#  string on the right.
+#------------------------------------------------------------------------------
 rpad() {
     local width=$1  str=$2
     local len=$(echo $str | sed -r 's/\x1B\[[0-9;]+[mKC]//g' | wc -m)
@@ -1049,8 +1066,9 @@ rpad() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# Remove all stale mount-point directories.  This is currently called by
+# commands that are going to need root anyway.  It's pretty fast now so
+# printing out the results takes longer.
 #------------------------------------------------------------------------------
 clean_mounts() {
     local where
@@ -1075,8 +1093,8 @@ clean_mounts() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# A little routine to allow use of %1 %2 ... in printf-like format strings
+# so translators have control over the order.
 #------------------------------------------------------------------------------
 printN() {
     local param num=1  fmt=$1 ; shift
@@ -1088,8 +1106,15 @@ printN() {
 }
 
 #------------------------------------------------------------------------------
+# Modified (for gui) BOILER PLATE to set the color scheme.  Currently all the
+# ANSI escapes are turned off in GUI-mode.  Someday I may add Pengo markup but
+# I don't have a great way of switching between Pengo and ANSI.  It might be
+# very easy by using an exec():
 #
-#
+#       set_color gui
+#       gui_str=$(eval $str)
+#       set_color high
+#       cli_str=$(eval $str)
 #------------------------------------------------------------------------------
 set_colors() {
     local scheme=${1:-high}
@@ -1171,8 +1196,7 @@ set_colors() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# BOILER PLATE to read command line parameters
 #------------------------------------------------------------------------------
 read_all_cmdline_mingled() {
 
@@ -1194,18 +1218,7 @@ read_all_cmdline_mingled() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
-#------------------------------------------------------------------------------
-check_param_cnt() {
-    local max=$1 ; shift
-    [ $# -le $max ] && return
-    fatal $"Unexpected command line parameter(s): %s" "$*"
-}
-
-#------------------------------------------------------------------------------
-#
-#
+# BOILER PLATE to read command line parameters.
 #------------------------------------------------------------------------------
 read_params() {
     # Most of this code is boiler-plate for parsing cmdline args
@@ -1251,8 +1264,7 @@ read_params() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# Show the version number and date.
 #------------------------------------------------------------------------------
 show_version() {
     local fmt="$hi_co%s$nc_co %s$num_co %s$nc_co ($date_co%s$nc_co)\n"
@@ -1262,8 +1274,8 @@ show_version() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# Find the dpi valued being used by Xorg server.  We try two ways.  The 2nd
+# could be more compact but that breaks my syntax highlighting
 #------------------------------------------------------------------------------
 get_dpi() {
     local dpi
@@ -1273,8 +1285,9 @@ get_dpi() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# Compute a good yad --width value based on the text (t_) and data (d_)
+# contents and an optional d_width which override computing the width from
+# the contents of $data.
 #------------------------------------------------------------------------------
 scale_yad_width() {
     local dpi=$1  text=$(echo -e "$2" | sed 's/<[^>]*>//g')  data=$3  d_chars=$4
@@ -1301,8 +1314,8 @@ scale_yad_width() {
 }
 
 #------------------------------------------------------------------------------
-#
-#
+# Compute a good yad --height value based on the text (t_) and data (d_)
+# contents.
 #------------------------------------------------------------------------------
 scale_yad_height() {
     local dpi=$1  text=$2  data=$3  t_height=0  d_height=0
@@ -1330,21 +1343,14 @@ scale_yad_height() {
     printf "%s" $((t_height + d_height + b_height))
 }
 
-
 #------------------------------------------------------------------------------
-#
-#
+# It is more convenient to call this as a function rather then echo and
+# pipe in the caller
 #------------------------------------------------------------------------------
-old_scale_yad_height() {
-    local dpi=$1  data=$2
-    local chars=$(echo -e "$data" | wc -l)
-    printf "%s" $((YAD_H_PIXELS_OFF + YAD_H_PIXELS_PER_CHAR * dpi * chars / 96))
-}
-
 count_lines() { echo "$1" | wc -l ;}
+
 #------------------------------------------------------------------------------
-#
-#
+# Use awk to find the longest line
 #------------------------------------------------------------------------------
 max_line_len() {
     local data=$1
