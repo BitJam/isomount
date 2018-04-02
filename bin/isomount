@@ -659,7 +659,7 @@ dfh_device_info() {
         file=$(loop_to_file $dev)
         [ -n "$file" ] && dev=$file
 
-        echo -e "$dev\n$type\n$size\n$used\n$avail\n$cent\n$mp"
+        my_echo -e "$dev\n$type\n$size\n$used\n$avail\n$cent\n$mp"
     done <<Device_Info
 $(echo "$data")
 Device_Info
@@ -917,7 +917,7 @@ device_info() {
         #file=
         #size=
         #type=
-        echo -e "$file\n$type\n$size\n$mp\n"
+        my_echo -e "$file\n$type\n$size\n$mp\n"
     done <<Device_Info
 $(echo "$data")
 Device_Info
@@ -1350,5 +1350,11 @@ max_line_len() {
     local data=$1
     printf "%s" "$data" | awk '{print length}' | sort -nr | head -n1
 }
+
+#------------------------------------------------------------------------------
+# This silly function allows me to reserve ^\s*echo for debugging.
+#------------------------------------------------------------------------------
+my_echo() {  echo "@"; }
+
 
 main "$@"
