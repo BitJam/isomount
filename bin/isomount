@@ -538,7 +538,11 @@ do_dfh() {
 
     # Find max width of all the fields
     local dev type size used avail cent mp
-    local w_type=${#lab_type}  w_size=${#lab_size} w_used=${#lab_used} w_avail=${#lab_avail} w_cent=${#lab_cent} w_mp=${#lab_mp}
+    local  w_type=$(label_size $lab_type)    w_size=$(label_size $label_size) w_used=$(label_size $lab_used)
+    local w_avail=$(label_size $lab_avail)   w_cent=$(label_size $lab_cent)     w_mp=$(label_size $lab_mp)
+
+    local w_labs=$((w_dev + w_type + w_size + w_used + w_avail + w_cent + w_mp))
+
     while read dev type size used avail cent mp; do
         [ ${#dev}  -gt 0         ] || continue
         [ $w_dev   -lt ${#dev}   ] && w_dev=${#dev}
@@ -552,10 +556,13 @@ do_dfh() {
 $(echo "$data" | tail -n+2)
 Dfh_Loop1
 
-    local w_all=$((w_dev + w_type + w_size + w_used + w_avail + w_cent + w_mp + 6))
+    local w_all=$((w_dev + w_type + w_size + w_used + w_avail + w_cent + w_mp))
+    debug1  w_all "$w_all"
+    debug1  w_labs "$w_labs"
+
     [ "$GUI_MODE" ] && do_dfh_gui "$data" "$w_all"
 
-    local truncate=$((w_dev + w_type + w_size + w_used + w_avail + w_cent + w_mp - SCREEN_WIDTH + 12))
+    local truncate=$((w_all - SCREEN_WIDTH))
     if [ $truncate -gt 0 ]; then
         w_dev=$((w_dev - truncate))
         [ $w_dev -lt $MIN_DEV_WIDTH ] && fatal "The screen appears to be way too narrow!"
@@ -766,7 +773,11 @@ show_mounts() {
     # fi
 
     local w_type=${#lab_type}  w_size=${#lab_size}  w_mp=${#lab_mp} w_file=${#lab_file}
-    local w_labs=$((w_type + w_size + w_mp + w_file + 12))
+
+    local  w_type=$(label_size $lab_type)    w_size=$(label_size $label_size)
+    local w_file=$(label_size $lab_file)       w_mp=$(label_size $lab_mp)
+
+    local w_labs=$((w_type + w_size + w_mp + w_file))
     while read dev type size used avail percent mp; do
         [ ${#dev} -gt 0 ] || continue
         local file=$(loop_to_file $dev)
@@ -778,7 +789,7 @@ show_mounts() {
 $(echo "$data")
 Show_Mounts
 
-    local w_all=$((w_file + w_type + w_size  + w_mp + 6))
+    local w_all=$((w_file + w_type + w_size  + w_mp))
     debug1  w_all "$w_all"
     debug1  w_labs "$w_labs"
     [ $w_all -lt $w_labs ] && w_all=$w_labs
@@ -1358,10 +1369,20 @@ max_line_len() {
 }
 
 #------------------------------------------------------------------------------
-# This silly function allows me to reserve ^\s*echo for debugging.
+# Get size of label and add an offset since that is built in.
 #------------------------------------------------------------------------------
-my_echo() {  echo "@"; }
+label_size() { echo $(( ${#1} + 4)) ;}
 
+#------------------------------------------------------------------------------
+# This silly function allows me to reserve "^\s*echo" for debugging.
+#------------------------------------------------------------------------------
+my_echo() {  echo "$@"; }
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+my_date() { date +"%F %T" ;}
 
 #==============================================================================
 main "$@"
