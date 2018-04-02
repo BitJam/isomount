@@ -748,17 +748,17 @@ show_mounts() {
     local lab_mp="Mounted at"
 
     local dev type size used avail percent mp file
-    [ "$GUI_MODE" ] && show_mounts_gui "$data"
 
     local h_co=$head_co$rev_co
     case $HEADER_TYPE in norm|n) h_co=$head_co  ;; esac
 
-    if [ -z "$data" ]; then
-        say '[%s]' "$h_co$(printf $"There are no %s" "$iso_mps")$nc_co$m_co"
-        return
-    fi
+    # if [ -z "$data" ]; then
+    #     say '[%s]' "$h_co$(printf $"There are no %s" "$iso_mps")$nc_co$m_co"
+    #     return
+    # fi
 
     local w_type=${#lab_type}  w_size=${#lab_size}  w_mp=${#lab_mp} w_file=${#lab_file}
+    local w_labs=$((w_type + w_size + w_mp + w_file + 12))
     while read dev type size used avail percent mp; do
         [ ${#dev} -gt 0 ] || continue
         local file=$(loop_to_file $dev)
@@ -770,8 +770,15 @@ show_mounts() {
 $(echo "$data")
 Show_Mounts
 
+    local w_all=$((w_file + w_type + w_size  + w_mp + 6))
+    debug1  w_all "$w_all"
+    debug1  w_labs "$w_labs"
+    [ $w_all -lt $w_labs ] && w_all=$w_labs
+    debug1  w_all "$w_all"
+    [ "$GUI_MODE" ] && show_mounts_gui "$data" "$w_all"
+
     local clip_mp
-    if [ $SCREEN_WIDTH -lt $((w_file + w_type + w_size + w_mp + 6)) ]; then
+    if [ $SCREEN_WIDTH -lt $w_all ]; then
         clip_mp=true
         lab_mp="MntPnt"
         w_mp=$((w_mp - ${#MNT_DIR} -1))
@@ -824,13 +831,13 @@ Show_Mounts
 #
 #------------------------------------------------------------------------------
 show_mounts_gui() {
-    local data=$1  text yad_w  yad_h
+    local data=$1  w_all=$2  text yad_w  yad_h
     local dpi=$(get_dpi)
     debug1 "dpi-0" "$dpi"
     local bold_actions=$(gui_bold $"Actions")
     local bold_iso_mps=$(gui_bold "$iso_mps")
     #-jbb data=
-    if [ -z "$data" ];  then
+    if [ -z "$data$DO_DEBUG" ];  then
         local  bold_no_mps=$(gui_bold "$(printf $"There are no %s" "$iso_mps")")
 
         if [ -z "$GUI_TEXT" ]; then
@@ -844,7 +851,7 @@ show_mounts_gui() {
         text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g')
         #-jbb text="hello world"
         #-jbb text="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx x x x xxxxxxxxxxx xxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxx xxxxx xxx"
-        yad_w=$(scale_yad_width  "$dpi" "$text" "$data")
+        yad_w=$(scale_yad_width  "$dpi" "$text" "$data" $w_all)
         yad_h=$(scale_yad_height "$dpi" "$text" "$data")
 
         my_yad $YAD_ERR_OPTS   \
@@ -870,7 +877,7 @@ show_mounts_gui() {
     debug1 "lines" "$(echo "$data$text" | wc -l)"
 
     #text=
-    yad_w=$(scale_yad_width  "$dpi" "$text" "$data")
+    yad_w=$(scale_yad_width  "$dpi" "$text" "$data" $w_all)
     yad_h=$(scale_yad_height "$dpi" "$text" "$data")
 
     debug1 "width" "$yad_w"
@@ -1271,6 +1278,7 @@ get_dpi() {
 #------------------------------------------------------------------------------
 scale_yad_width() {
     local dpi=$1  text=$(echo -e "$2" | sed 's/<[^>]*>//g')  data=$3  d_chars=$4
+    debug1 d_chars "$d_chars"
     local t_width=0  d_width=0
     if [ -n "$text" ]; then
         local t_chars=$(max_line_len "$text")
@@ -1278,7 +1286,7 @@ scale_yad_width() {
         local t_width=$(((YAD_W_TEXT_OFF + YAD_W_TEXT_PPC * t_chars) * dpi / 96 / 100))
     fi
 
-    if [ -n "$data" ]; then
+    if [ -n "$data$d_chars" ]; then
         #local d_chars=$(max_line_len "$data")
         : ${d_chars:=$(data_width "$data")}
         debug1 "d_chars" "$d_chars"
