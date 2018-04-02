@@ -29,17 +29,23 @@ if [ -n "$YAD_IMAGE" -a -r "$YAD_IMAGE" ]; then
 fi
 
 # Constants for scaling size of yad window
-YAD_H_TEXT_PPC=16
-YAD_H_TEXT_OFF=10
-YAD_H_DATA_PPC=23
-YAD_H_DATA_OFF=140
+YAD_H_TEXT_PPC=1600
+YAD_H_TEXT_OFF=0
 
-YAD_W_TEXT_PPC=640    # divided by 100
-YAD_W_TEXT_OFF=50
-YAD_W_DATA_PPC=640    # divided by 100
-YAD_W_DATA_PPC=680    # divided by 100 @ 96
-YAD_W_DATA_PPC=680    # divided by 100
-YAD_W_DATA_OFF=60
+#YAD_H_DATA_PPC=2400
+YAD_H_DATA_PPC=1800
+YAD_H_DATA_OFF=2000
+YAD_H_BUTTON=0000
+YAD_H_DATA_C=118
+YAD_H_PER_ROW=600
+
+YAD_W_TEXT_PPC=640
+YAD_W_TEXT_OFF=5000
+YAD_W_DATA_PPC=640
+YAD_W_DATA_OFF=6000
+
+#--a YAD_W_DATA_PPC=680    # divided by 100 @ 96
+#--a YAD_W_DATA_PPC=680    # divided by 100
 
 
 GUI_BOLD_FMT='<span color="#0000C0" font_weight="bold" size="larger">%s</span>'
