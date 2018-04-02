@@ -455,14 +455,13 @@ any_umount() {
             is_done=true
             for mp in $(df -a | sed 's/.* //' | grep "^$MNT_DIR/" | tac); do
                 mountpoint -q $mp || continue
-                local what=$(mp_to_file "$where")
                 $SUDO umount $mp
 
                 if mountpoint -q $mp; then
                     is_done=
                 else
                     $SUDO rmdir   "$mp"
-                    say_unmounted "$mp" "$what"
+                    say_unmounted "$mp"
                 fi
             done
             [ "$is_done" ] && break
@@ -674,7 +673,8 @@ Device_Info
 #
 #------------------------------------------------------------------------------
 say_unmounted() {
-    local where=$1  what=$2
+    local where=$1  what=${2:-$(mp_to_file $where)}
+
     if [ -n "$what" ]; then
         say $"Unmounted %s (%s)" "$hi_co$where$m_co" "$hi_co$what$m_co"
     else
