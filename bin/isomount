@@ -1306,7 +1306,7 @@ scale_yad_width() {
 #------------------------------------------------------------------------------
 scale_yad_height() {
     local dpi=$1  text=$2  data=$3  t_height=0  d_height=0
-    local t_lines t_height d_lines d_height
+    local t_lines t_height d_rows d_height
 
     if [ -n "$text" ]; then
         t_lines=$(count_lines "$text")
@@ -1317,10 +1317,10 @@ scale_yad_height() {
     t_height=$(((YAD_H_TEXT_OFF + (YAD_H_TEXT_PPC * t_lines)) * dpi  / 96 / 100))
 
     if [ -n "$data" ]; then
-        d_lines=$(count_lines "$data")
-        debug1 "d_lines" "$d_lines"
-        d_height=$(((YAD_H_DATA_OFF + (YAD_H_DATA_PPC * d_lines)) * dpi  / 96 / 100))
-        d_height=$((d_height + YAD_H_DATA_C + YAD_H_PER_ROW * d_lines / 100))
+        d_rows=$(count_lines "$data")
+        debug1 "d_rows" "$d_rows"
+        d_height=$(((YAD_H_DATA_OFF + (YAD_H_DATA_PPC * d_rows)) * dpi  / 96 / 100))
+        d_height=$((d_height + YAD_H_DATA_C + YAD_H_PER_ROW * d_rows / 100))
     fi
 
     local b_height=$(($YAD_H_BUTTON * dpi / 96 / 100))
