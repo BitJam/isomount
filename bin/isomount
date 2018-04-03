@@ -545,9 +545,6 @@ do_dfh() {
 
     local DPI=$(get_dpi)
 
-    #echo "$data"
-    #echo
-
     local lab_dev="File/Device"
     local lab_type="Type"
     local lab_size="Size"
@@ -580,8 +577,6 @@ $(echo "$data" | tail -n+2)
 Dfh_Loop1
 
     local w_all=$((w_dev + w_type + w_size + w_used + w_avail + w_cent + w_mp))
-    debug1  w_all "$w_all"
-    debug1  w_labs "$w_labs"
 
     [ "$GUI_MODE" ] && do_dfh_gui "$data" "$w_all"
 
@@ -755,7 +750,6 @@ debug1() {
     printf "D: %10s: %5s\n" "$@" >&2
 }
 
-
 #------------------------------------------------------------------------------
 # The passed printf format and parameters are printed only if we are in
 # verbose-mode and not in gui-mode.
@@ -813,10 +807,7 @@ $(echo "$data")
 Show_Mounts
 
     local w_all=$((w_file + w_type + w_size  + w_mp))
-    debug1  w_all "$w_all"
-    debug1  w_labs "$w_labs"
     [ $w_all -lt $w_labs ] && w_all=$w_labs
-    debug1  w_all "$w_all"
     [ "$GUI_MODE" ] && show_mounts_gui "$data" "$w_all"
 
     local clip_mp
@@ -919,7 +910,6 @@ show_mounts_gui() {
 
     debug1 "lines" "$(echo "$data$text" | wc -l)"
 
-    #text=
     yad_w=$(scale_yad_width   "$text" "$data" $w_all)
     yad_h=$(scale_yad_height  "$text" "$data")
 
@@ -1327,18 +1317,15 @@ get_dpi() {
 #------------------------------------------------------------------------------
 scale_yad_width() {
     local text=$(echo -e "$1" | sed 's/<[^>]*>//g')  data=$2  d_chars=$3
-    debug1 d_chars "$d_chars"
     local t_width=0  d_width=0
     if [ -n "$text" ]; then
         local t_chars=$(max_line_len "$text")
-        debug1 "t_chars" "$t_chars"
         local t_width=$(((YAD_WD_TEXT_PAD + YAD_WD_TEXT_PPC * t_chars) * DPI / 96 / 100))
     fi
 
     if [ -n "$data$d_chars" ]; then
         #local d_chars=$(max_line_len "$data")
         : ${d_chars:=$(data_width "$data")}
-        debug1 "d_chars" "$d_chars"
         local d_width=$(((YAD_WD_DATA_PAD + YAD_WD_DATA_PPC * d_chars) * DPI / 96 / 100))
     fi
 
@@ -1362,20 +1349,16 @@ scale_yad_height() {
     else
         t_lines=1
     fi
-    debug1 "t_lines" "$t_lines"
+
     t_height=$(((YAD_HT_TEXT_PAD + (YAD_HT_TEXT_PPC * t_lines)) * DPI  / 96 / 100))
 
     if [ -n "$data" ]; then
         d_rows=$(count_lines "$data")
-        debug1 "d_rows" "$d_rows"
         d_height=$(((YAD_HT_DATA_PAD + (YAD_HT_DATA_PPC * d_rows)) * DPI  / 96 / 100))
         d_height=$((d_height + YAD_HT_DATA_OFF + YAD_HT_PER_ROW * d_rows / 100))
     fi
 
     local b_height=$(($YAD_HT_BUTTON * DPI / 96 / 100))
-    debug1 "t_height" "$t_height"
-    debug1 "d_height" "$d_height"
-    debug1 "b_height" "$b_height"
     printf "%s" $((t_height + d_height + b_height))
 }
 
