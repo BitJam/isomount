@@ -42,7 +42,9 @@ YAD_H_PER_ROW=600
 YAD_W_TEXT_PPC=640
 YAD_W_TEXT_OFF=5000
 YAD_W_DATA_PPC=640
-YAD_W_DATA_OFF=6000
+YAD_W_DATA_OFF=6000   #
+YAD_H_LAB_OFF=4       # padding to table labels in pixels
+
 
 #--a YAD_W_DATA_PPC=680    # divided by 100 @ 96
 #--a YAD_W_DATA_PPC=680    # divided by 100
@@ -522,6 +524,8 @@ do_dfh() {
     local exclude_list=$(echo $EXCLUDE_FS_TYPES $USER_EXCLUDES | sed -r "s/\s+/ -x /g")
     local data=$(df -ahT -x $exclude_list | tail -n+2)
 
+    local DPI=$(get_dpi)
+
     #echo "$data"
     #echo
 
@@ -625,20 +629,19 @@ Dfh_Loop2
 #
 #------------------------------------------------------------------------------
 do_dfh_gui() {
-    local data=$1  w_all=$2  title  yad_w  yad_h  dpi text
+    local data=$1  w_all=$2  title  yad_w  yad_h  text
 
-    dpi=$(get_dpi)
-    debug1 "dpi-0" "$dpi"
-    [ "$DO_DEBUG" ] && text=$(printf "%s\n" "dpi: $dpi, rows: $(echo "$data" | wc -l), version: $VERSION ($(my_date))")
+    debug1 "dpi-0" "$DPI"
+    [ "$DO_DEBUG" ] && text=$(printf "%s\n" "dpi: $DPI, rows: $(echo "$data" | wc -l), version: $VERSION ($(my_date))")
 
-    yad_w=$(scale_yad_width  "$dpi" "$text" "$data" $w_all)
-    yad_h=$(scale_yad_height "$dpi" "$text" "$data")
+    yad_w=$(scale_yad_width  "$text" "$data" $w_all)
+    yad_h=$(scale_yad_height "$text" "$data")
 
     debug1 "width" "$yad_w"
     debug1 "height" "$yad_h"
 
     title=$ME
-    [ "$DO_DEBUG" ] && title="$ME @ $dpi rows $(echo "$data" | wc -l)"
+    [ "$DO_DEBUG" ] && title="$ME @ $DPI rows $(echo "$data" | wc -l)"
 
     dfh_device_info "$data" | my_yad $YAD_STD_OPTS \
         --title  "$title"     \
@@ -756,6 +759,7 @@ show_mounts() {
     local data=$(df -ahT | grep -E " $MNT_DIR/($ISO_NAME|$SQ_NAME)[0-9]")
     local iso_mps=$(printN "%1 %2" "$MAIN_NAME" "$MOUNT_POINTS")
 
+    local DPI=$(get_dpi)
 
     local lab_type="Type"
     local lab_file="File"
@@ -852,8 +856,8 @@ Show_Mounts
 #------------------------------------------------------------------------------
 show_mounts_gui() {
     local data=$1  w_all=$2  text yad_w  yad_h
-    local dpi=$(get_dpi)
-    debug1 "dpi-0" "$dpi"
+
+    debug1 "dpi-0" "$DPI"
     local bold_actions=$(gui_bold $"Actions")
     local bold_iso_mps=$(gui_bold "$iso_mps")
     #-jbb data=
@@ -865,14 +869,14 @@ show_mounts_gui() {
         else
             text=$(printf '%s\n%s\n%s' "$bold_actions" "$GUI_TEXT" "$bold_no_mps")
         fi
-        [ "$DO_DEBUG" ] && text="dpi: $dpi, rows: $(echo "$data" | wc -l), version:  $VERSION ($(my_date))\n$text"
+        [ "$DO_DEBUG" ] && text="dpi: $DPI, rows: $(echo "$data" | wc -l), version:  $VERSION ($(my_date))\n$text"
         [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
 
         text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g')
         #-jbb text="hello world"
         #-jbb text="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx x x x xxxxxxxxxxx xxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxx xxxxx xxx"
-        yad_w=$(scale_yad_width  "$dpi" "$text" "$data" $w_all)
-        yad_h=$(scale_yad_height "$dpi" "$text" "$data")
+        yad_w=$(scale_yad_width   "$text" "$data" $w_all)
+        yad_h=$(scale_yad_height  "$text" "$data")
 
         my_yad $YAD_ERR_OPTS   \
             --title  "$ME"     \
@@ -897,14 +901,14 @@ show_mounts_gui() {
     debug1 "lines" "$(echo "$data$text" | wc -l)"
 
     #text=
-    yad_w=$(scale_yad_width  "$dpi" "$text" "$data" $w_all)
-    yad_h=$(scale_yad_height "$dpi" "$text" "$data")
+    yad_w=$(scale_yad_width   "$text" "$data" $w_all)
+    yad_h=$(scale_yad_height  "$text" "$data")
 
     debug1 "width" "$yad_w"
     debug1 "height" "$yad_h"
 
     local title=$ME
-    [ "$DO_DEBUG" ] && title="$ME @ $dpi rows $(echo "$data" | wc -l)"
+    [ "$DO_DEBUG" ] && title="$ME @ $DPI rows $(echo "$data" | wc -l)"
     device_info "$data" | my_yad $YAD_STD_OPTS \
         --title "$title"     \
         --text "$text"       \
@@ -1290,6 +1294,8 @@ show_version() {
 #------------------------------------------------------------------------------
 get_dpi() {
     local dpi
+
+    [ -z "$GUI_MODE" ] && return
     dpi=$(xrdb -query | grep '^[[:space:]]*Xft.dpi:' | awk '{print $2 }' | head -n1)
     [ -z "$dpi" ] && dpi=$(xdpyinfo | grep '^[[:space:]]*resolution:' | tail -n1 | awk '{print $2}' | sed 's/x.*//')
     printf "%s" "$dpi"
@@ -1301,20 +1307,20 @@ get_dpi() {
 # the contents of $data.
 #------------------------------------------------------------------------------
 scale_yad_width() {
-    local dpi=$1  text=$(echo -e "$2" | sed 's/<[^>]*>//g')  data=$3  d_chars=$4
+    local text=$(echo -e "$1" | sed 's/<[^>]*>//g')  data=$2  d_chars=$3
     debug1 d_chars "$d_chars"
     local t_width=0  d_width=0
     if [ -n "$text" ]; then
         local t_chars=$(max_line_len "$text")
         debug1 "t_chars" "$t_chars"
-        local t_width=$(((YAD_W_TEXT_OFF + YAD_W_TEXT_PPC * t_chars) * dpi / 96 / 100))
+        local t_width=$(((YAD_W_TEXT_OFF + YAD_W_TEXT_PPC * t_chars) * DPI / 96 / 100))
     fi
 
     if [ -n "$data$d_chars" ]; then
         #local d_chars=$(max_line_len "$data")
         : ${d_chars:=$(data_width "$data")}
         debug1 "d_chars" "$d_chars"
-        local d_width=$(((YAD_W_DATA_OFF + YAD_W_DATA_PPC * d_chars) * dpi / 96 / 100))
+        local d_width=$(((YAD_W_DATA_OFF + YAD_W_DATA_PPC * d_chars) * DPI / 96 / 100))
     fi
 
     if [ $t_width -gt $d_width ]; then
@@ -1329,7 +1335,7 @@ scale_yad_width() {
 # contents.
 #------------------------------------------------------------------------------
 scale_yad_height() {
-    local dpi=$1  text=$2  data=$3  t_height=0  d_height=0
+    local text=$1  data=$2  t_height=0  d_height=0
     local t_lines t_height d_rows d_height
 
     if [ -n "$text" ]; then
@@ -1338,16 +1344,16 @@ scale_yad_height() {
         t_lines=1
     fi
     debug1 "t_lines" "$t_lines"
-    t_height=$(((YAD_H_TEXT_OFF + (YAD_H_TEXT_PPC * t_lines)) * dpi  / 96 / 100))
+    t_height=$(((YAD_H_TEXT_OFF + (YAD_H_TEXT_PPC * t_lines)) * DPI  / 96 / 100))
 
     if [ -n "$data" ]; then
         d_rows=$(count_lines "$data")
         debug1 "d_rows" "$d_rows"
-        d_height=$(((YAD_H_DATA_OFF + (YAD_H_DATA_PPC * d_rows)) * dpi  / 96 / 100))
+        d_height=$(((YAD_H_DATA_OFF + (YAD_H_DATA_PPC * d_rows)) * DPI  / 96 / 100))
         d_height=$((d_height + YAD_H_DATA_C + YAD_H_PER_ROW * d_rows / 100))
     fi
 
-    local b_height=$(($YAD_H_BUTTON * dpi / 96 / 100))
+    local b_height=$(($YAD_H_BUTTON * DPI / 96 / 100))
     debug1 "t_height" "$t_height"
     debug1 "d_height" "$d_height"
     debug1 "b_height" "$b_height"
@@ -1371,7 +1377,14 @@ max_line_len() {
 #------------------------------------------------------------------------------
 # Get size of label and add an offset since that is built in.
 #------------------------------------------------------------------------------
-label_size() { echo $(( ${#1} + 4)) ;}
+label_size() {
+    local len=${#1}
+    if [ "$GUI_MODE" ]; then
+        printf "%s"  $((len + YAD_H_LAB_OFF * DPI /96 / 100))
+    else
+        printf $len
+    fi
+}
 
 #------------------------------------------------------------------------------
 # This silly function allows me to reserve "^\s*echo" for debugging.
