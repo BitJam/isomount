@@ -28,26 +28,45 @@ if [ -n "$YAD_IMAGE" -a -r "$YAD_IMAGE" ]; then
     YAD_ERR_OPTS="$YAD_ERR_OPTS --image=$YAD_IMAGE"
 fi
 
-# Constants for scaling size of yad window
-YAD_H_TEXT_PPC=1600
-YAD_H_TEXT_OFF=0
+#==============================================================================
+# Imperical constants for scaling the size of yad windows ...
+# .. with DPI, width and height of the text block and width and height of a
+# table including the header labels.
+#------------------------------------------------------------------------------
+# _HT_ for height and _WD_ for width.
+#
+# _TEXT_ is for the block of text and _DATA_ is for the table
+#
+# Most/all values are in hundreths of a pixel at 96 DPI.  Most scale with DPI
+# but a few don't.
+#
+# _PAD = extra space @ 96 DPI
+# _PPC = pixels per character @ 96 DPI
+# _OFF = extra space that does *not* scale with DPI
+#
+# HT_PER_ROW does *not* scale with DPI
+#
+# WD_LAB_PAD is extra padding on each header label.  Scales with DPI
+#==============================================================================
 
-#YAD_H_DATA_PPC=2400
-YAD_H_DATA_PPC=1800
-YAD_H_DATA_OFF=2000
-YAD_H_BUTTON=0000
-YAD_H_DATA_C=118
-YAD_H_PER_ROW=600
+#---- Text height and width ---------------------------------------------------
+YAD_HT_TEXT_PPC=1600
+YAD_HT_TEXT_PAD=0
+YAD_WD_TEXT_PPC=640
+YAD_WD_TEXT_PAD=5000
 
-YAD_W_TEXT_PPC=640
-YAD_W_TEXT_OFF=5000
-YAD_W_DATA_PPC=640
-YAD_W_DATA_OFF=6000   #
-YAD_H_LAB_OFF=4       # padding to table labels in pixels
+#---- Table height and width --------------------------------------------------
+YAD_HT_DATA_PPC=1800
+YAD_HT_DATA_PAD=2000
+YAD_HT_DATA_OFF=118
+ YAD_HT_PER_ROW=600
 
+ YAD_WD_LAB_PAD=200     # padding to table labels in pixels
+YAD_WD_DATA_PPC=640     #
+YAD_WD_DATA_PAD=6000    #
 
-#--a YAD_W_DATA_PPC=680    # divided by 100 @ 96
-#--a YAD_W_DATA_PPC=680    # divided by 100
+#---- Button height  ------------------------------------------------------
+  YAD_HT_BUTTON=0000
 
 
 GUI_BOLD_FMT='<span color="#0000C0" font_weight="bold" size="larger">%s</span>'
@@ -1313,14 +1332,14 @@ scale_yad_width() {
     if [ -n "$text" ]; then
         local t_chars=$(max_line_len "$text")
         debug1 "t_chars" "$t_chars"
-        local t_width=$(((YAD_W_TEXT_OFF + YAD_W_TEXT_PPC * t_chars) * DPI / 96 / 100))
+        local t_width=$(((YAD_WD_TEXT_PAD + YAD_WD_TEXT_PPC * t_chars) * DPI / 96 / 100))
     fi
 
     if [ -n "$data$d_chars" ]; then
         #local d_chars=$(max_line_len "$data")
         : ${d_chars:=$(data_width "$data")}
         debug1 "d_chars" "$d_chars"
-        local d_width=$(((YAD_W_DATA_OFF + YAD_W_DATA_PPC * d_chars) * DPI / 96 / 100))
+        local d_width=$(((YAD_WD_DATA_PAD + YAD_WD_DATA_PPC * d_chars) * DPI / 96 / 100))
     fi
 
     if [ $t_width -gt $d_width ]; then
@@ -1344,16 +1363,16 @@ scale_yad_height() {
         t_lines=1
     fi
     debug1 "t_lines" "$t_lines"
-    t_height=$(((YAD_H_TEXT_OFF + (YAD_H_TEXT_PPC * t_lines)) * DPI  / 96 / 100))
+    t_height=$(((YAD_HT_TEXT_PAD + (YAD_HT_TEXT_PPC * t_lines)) * DPI  / 96 / 100))
 
     if [ -n "$data" ]; then
         d_rows=$(count_lines "$data")
         debug1 "d_rows" "$d_rows"
-        d_height=$(((YAD_H_DATA_OFF + (YAD_H_DATA_PPC * d_rows)) * DPI  / 96 / 100))
-        d_height=$((d_height + YAD_H_DATA_C + YAD_H_PER_ROW * d_rows / 100))
+        d_height=$(((YAD_HT_DATA_PAD + (YAD_HT_DATA_PPC * d_rows)) * DPI  / 96 / 100))
+        d_height=$((d_height + YAD_HT_DATA_OFF + YAD_HT_PER_ROW * d_rows / 100))
     fi
 
-    local b_height=$(($YAD_H_BUTTON * DPI / 96 / 100))
+    local b_height=$(($YAD_HT_BUTTON * DPI / 96 / 100))
     debug1 "t_height" "$t_height"
     debug1 "d_height" "$d_height"
     debug1 "b_height" "$b_height"
@@ -1380,7 +1399,7 @@ max_line_len() {
 label_size() {
     local len=${#1}
     if [ "$GUI_MODE" ]; then
-        printf "%s"  $((len + YAD_H_LAB_OFF * DPI /96 / 100))
+        printf "%s"  $((len + YAD_WD_LAB_PAD * DPI /96 / 100))
     else
         printf $len
     fi
@@ -1389,7 +1408,7 @@ label_size() {
 #------------------------------------------------------------------------------
 # This silly function allows me to reserve "^\s*echo" for debugging.
 #------------------------------------------------------------------------------
-my_echo() {  echo "$@"; }
+my_echo() { echo "$@"; }
 
 #------------------------------------------------------------------------------
 #
