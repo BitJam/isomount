@@ -669,7 +669,7 @@ dfh_device_info() {
         file=$(loop_to_file $dev)
         [ -n "$file" ] && dev=$file
 
-        my_echo -e "$dev\n$type\n$size\n$used\n$avail\n$cent\n$mp"
+        my_echo -en "$dev\n$type\n$size\n$used\n$avail\n$cent\n$mp\n"
     done <<Device_Info
 $(echo "$data")
 Device_Info
@@ -938,7 +938,7 @@ device_info() {
         #file=
         #size=
         #type=
-        my_echo -e "$file\n$type\n$size\n$mp\n"
+        my_echo -en "$file\n$type\n$size\n$mp\n"
     done <<Device_Info
 $(echo "$data")
 Device_Info
