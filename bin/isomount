@@ -629,7 +629,7 @@ do_dfh_gui() {
 
     dpi=$(get_dpi)
     debug1 "dpi-0" "$dpi"
-    [ "$DO_DEBUG" ] && text=$(printf "%s\n" "dpi: $dpi   rows: $(echo "$data" | wc -l)")
+    [ "$DO_DEBUG" ] && text=$(printf "%s\n" "dpi: $dpi, rows: $(echo "$data" | wc -l), version: $VERSION ($(my_date))")
 
     yad_w=$(scale_yad_width  "$dpi" "$text" "$data" $w_all)
     yad_h=$(scale_yad_height "$dpi" "$text" "$data")
@@ -865,7 +865,7 @@ show_mounts_gui() {
         else
             text=$(printf '%s\n%s\n%s' "$bold_actions" "$GUI_TEXT" "$bold_no_mps")
         fi
-        [ "$DO_DEBUG" ] && text="dpi: $dpi   rows: $(echo "$data" | wc -l)\n$text"
+        [ "$DO_DEBUG" ] && text="dpi: $dpi, rows: $(echo "$data" | wc -l), version:  $VERSION ($(my_date))\n$text"
         [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
 
         text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g')
