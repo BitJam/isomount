@@ -218,6 +218,35 @@ Usage
 #
 #
 #------------------------------------------------------------------------------
+dfh_watch_usage() {
+
+    cat << Usage
+${bold_co}Usage: ${m_co}$ME [options]${nc_co}
+
+Repeatedly run the dfh command.
+
+${bold_co}Options:$nc_co
+    $m_co-c --color=<xxx>    $nc_co set color scheme to: off|low|low2|bw|dark|high
+    $m_co-d --delay=<xxx>    $nc_co delay in fractional seconds
+
+    $m_co-h --help           $nc_co show this usage
+    $m_co-H --header=<type>  $nc_co change header look: norm, rev1, rev2, rev3
+                                             (n,      r1,   r2,   r3)
+
+    $m_co-t --top            $nc_co display at the top of the screen instead of the bottom
+    $m_co-v --version        $nc_co show version number and exit
+
+    $m_co-x, --exclude-type=<xxx> $nc_co list of more file types to exclude
+                              (comma delimited)
+Usage
+    exit 0
+}
+
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
 usage() {
 
     show_version
@@ -232,6 +261,7 @@ usage() {
         clean_usage        ; echo
         show_mounts_usage  ; echo
         dfh_usage          ; echo
+        dfh_watch_usage    ; echo
         DONT_SHOW_OPTS=
         opt_usage
         exit 0
@@ -239,6 +269,7 @@ usage() {
 
     case $ME in
                   dfh) dfh_usage           ;;
+            dfh_watch) dfh_watch_usage     ;;
              isomount) iso_mount_usage     ;;
               sqmount) sq_mount_usage      ;;
             isoumount) iso_umount_usage    ;;
@@ -258,6 +289,7 @@ usage() {
 takes_param() {
     case $1 in
             -color|c) return 0 ;;
+            -delay|d) return 0 ;;
            -header|H) return 0 ;;
      -exclude-type|x) return 0 ;;
                    *) return 1 ;;
@@ -281,15 +313,28 @@ eval_argument() {
     local arg=$1  val=$2
 
     case $ME in
-        dfh) case $arg in
-                -exclude-type|x)  USER_EXCLUDES="$USER_EXCLUDES ${val//,/ }" ; return ;;
-             esac
-    esac
+            dfh) case $arg in
+                    -exclude-type|x)  USER_EXCLUDES="$USER_EXCLUDES ${val//,/ }" ; return ;;
+                 esac ;;
+      dfh-watch) case $arg in
+                     -color|c)  COLOR_SCHEME=$val   ;;
+                     -color=*)  COLOR_SCHEME=$val   ;;
+                     -delay|d)  WATCH_DELAY=$val    ;;
+                     -delay=*)  WATCH_DELAY=$val    ;;
+                      -help|h)  DO_HELP=true        ;;
+                    -header|H)  HEADER_TYPE=$val    ;;
+                    -header=*)  HEADER_TYPE=$val    ;;
+                       -top|t)  DO_DFH_TOP=true     ;;
+                   -version|v)  SHOW_VERSION=true   ;;
+                            *)  fatal $"Unknown parameter %s" "-$arg"  ;;
+                 esac
+                 return ;;
+        esac
 
     case $arg in
          -color|c)  COLOR_SCHEME=$val   ;;
          -color=*)  COLOR_SCHEME=$val   ;;
-         -debub|d)  DO_DEBUG=true       ;;
+         -debug|d)  DO_DEBUG=true       ;;
            -gui|g)  GUI_MODE=true       ;;
           -help|h)  DO_HELP=true        ;;
         -header|H)  HEADER_TYPE=$val    ;;
@@ -309,10 +354,12 @@ eval_argument() {
 #
 #------------------------------------------------------------------------------
 main() {
-    local SHIFT  SHIFT_2  SHORT_STACK="cdegHhQqsVv"
+    local SHIFT  SHIFT_2  SHORT_STACK="cdegHhQqstVv"
     local NO_MPS  ONLY_MPS  BE_SILENT BE_VERBOSE  PARAM_CNT
-    local GUI_TEXT SCREEN_WIDTH  NO_SCREEN
+    local GUI_TEXT SCREEN_WIDTH SCREEN_HEIGHT  NO_SCREEN
+    local RESTORE_CURSOR
 
+    SCREEN_HEIGHT=$(stty size | cut -d" " -f1)
     SCREEN_WIDTH=$(stty size | cut -d" " -f2)
     [ -z "$SCREEN_WIDTH"  -o "$SCREEN_WIDTH" = 0 ] && NO_SCREEN=true
 
@@ -335,7 +382,7 @@ main() {
     esac
 
     case $base in
-                  dfh)   ;;
+        dfh|dfh-watch)   ;;
              isomount)   ;;
               sqmount)   ;;
             isoumount)   ;;
@@ -358,6 +405,7 @@ main() {
     [ $PARAM_CNT -gt $max_param ] && fatal $"Too many command line parameters"
     case $base in
                   dfh)  do_dfh                              ;;
+            dfh-watch)  do_dfh_watch                        ;;
              isomount)  do_iso_mount  "$CMD_CMDS"           ;;
               sqmount)  do_sq_mount   "$CMD_CMDS"           ;;
             isoumount)  do_iso_umount "$CMD_CMDS"           ;;
@@ -533,6 +581,28 @@ do_umount() {
 	$SUDO rmdir   "$where" || fatal $"Failed to remove %s directory" "$where"
 
     say_unmounted "$where" "$what"
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+do_dfh_watch() {
+    local data  last_data
+    trap restore_cursor EXIT
+    hide_cursor
+
+    while true; do
+        [ -n "$data" ] && sleep ${WATCH_DELAY:-1}
+        local data=$(do_dfh)
+        [ "$data" = "$last_data" ] && continue
+        local lines=$(count_lines "$data")
+        local extra=$((SCREEN_HEIGHT - lines))
+        clear
+        [ $extra -gt 1 -a -z "$DO_DFH_TOP" ] && printf "%${extra}s" '' | tr ' ' '\n'
+        last_data=$data
+        echo -n "$data"
+    done
 }
 
 #------------------------------------------------------------------------------
@@ -1398,6 +1468,26 @@ my_echo() { echo "$@"; }
 #
 #------------------------------------------------------------------------------
 my_date() { date +"%F %T" ;}
+
+#------------------------------------------------------------------------------
+# Hide cursor and prepare restore_cursor() to work just once
+#------------------------------------------------------------------------------
+hide_cursor() {
+    RESTORE_CURSOR="\e[?25h"
+
+    # Disable cursor
+    printf "\e[?25l"
+}
+
+#------------------------------------------------------------------------------
+# Only works once after hide_cursor() runs.  This allows me to call it in the
+# normal flow and at clean up.
+#------------------------------------------------------------------------------
+restore_cursor() {
+    printf "$RESTORE_CURSOR"
+    RESTORE_CURSOR=
+}
+
 
 #==============================================================================
 main "$@"
