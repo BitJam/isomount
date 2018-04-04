@@ -1355,7 +1355,7 @@ scale_yad_height() {
     if [ -n "$data" ]; then
         d_rows=$(count_lines "$data")
         d_height=$(((YAD_HT_DATA_PAD + (YAD_HT_DATA_PPC * d_rows)) * DPI  / 96 / 100))
-        d_height=$((d_height + YAD_HT_DATA_OFF + YAD_HT_PER_ROW * d_rows / 100))
+        d_height=$((d_height + YAD_HT_DATA_OFF / 100 + YAD_HT_DATA_PPR * d_rows / 100))
     fi
 
     local b_height=$(($YAD_HT_BUTTON * DPI / 96 / 100))
