@@ -269,7 +269,7 @@ usage() {
 
     case $ME in
                   dfh) dfh_usage           ;;
-            dfh_watch) dfh_watch_usage     ;;
+            dfh-watch) dfh_watch_usage     ;;
              isomount) iso_mount_usage     ;;
               sqmount) sq_mount_usage      ;;
             isoumount) iso_umount_usage    ;;
