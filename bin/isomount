@@ -44,7 +44,7 @@ fi
 # _PPC = pixels per character @ 96 DPI
 # _OFF = extra space that does *not* scale with DPI
 #
-# HT_PER_ROW does *not* scale with DPI
+#_PPR  = Pixels Per Rows, does *not* scale with DPI
 #
 # WD_LAB_PAD is extra padding on each header label.  Scales with DPI
 #==============================================================================
@@ -58,8 +58,8 @@ YAD_WD_TEXT_PAD=5000
 #---- Table height and width --------------------------------------------------
 YAD_HT_DATA_PPC=1800
 YAD_HT_DATA_PAD=2000
-YAD_HT_DATA_OFF=118
- YAD_HT_PER_ROW=600
+YAD_HT_DATA_OFF=11800
+YAD_HT_DATA_PPR=600
 
  YAD_WD_LAB_PAD=200     # padding to table labels in pixels
 YAD_WD_DATA_PPC=640     #
