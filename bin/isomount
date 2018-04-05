@@ -289,11 +289,15 @@ usage() {
 takes_param() {
     case $1 in
             -color|c) return 0 ;;
-            -delay|d) return 0 ;;
            -header|H) return 0 ;;
      -exclude-type|x) return 0 ;;
-                   *) return 1 ;;
     esac
+
+    case $ME in dfh-watch)
+        case $1 in -delay|d) return 0 ;; esac ;;
+    esac
+
+    return 1
 }
 
 #------------------------------------------------------------------------------
