@@ -80,6 +80,7 @@ MIN_DEV_WIDTH=12
 EXCLUDE_FS_TYPES="tmpfs devtmpfs rootfs proc devpts sysfs mqueue securityfs debugfs
                   fusectl pstore cgroup binfmt_misc hugetlbfs"
 
+
 #------------------------------------------------------------------------------
 # Only use the "sudo" command (where needed) if we are not root.
 #------------------------------------------------------------------------------
@@ -208,8 +209,10 @@ ${bold_co}Options:$nc_co
 
     $m_co-v --version        $nc_co show version number and exit
 
-    $m_co-x, --exclude-type=<xxx> $nc_co list of more file types to exclude
+    $m_co-x, --exclude=<xxx> $nc_co list of used,avail,percent columns to exclude
+    $m_co-X, --Exclude=<xxx> $nc_co list of more file system types to exclude
                               (comma delimited)
+
 Usage
     exit 0
 }
@@ -236,7 +239,8 @@ ${bold_co}Options:$nc_co
     $m_co-t --top            $nc_co display at the top of the screen instead of the bottom
     $m_co-v --version        $nc_co show version number and exit
 
-    $m_co-x, --exclude-type=<xxx> $nc_co list of more file types to exclude
+    $m_co-x, --exclude=<xxx> $nc_co list of [used,avail,percent] columns to exclude
+    $m_co-X, --Exclude=<xxx> $nc_co list of more file system types to exclude
                               (comma delimited)
 Usage
     exit 0
@@ -290,7 +294,8 @@ takes_param() {
     case $1 in
             -color|c) return 0 ;;
            -header|H) return 0 ;;
-     -exclude-type|x) return 0 ;;
+          -exclude|x) return 0 ;;
+          -Exclude|X) return 0 ;;
     esac
 
     case $ME in dfh-watch)
@@ -317,14 +322,18 @@ eval_argument() {
     local arg=$1  val=$2
 
     case $ME in
-            dfh) case $arg in
-                    -exclude-type|x)  USER_EXCLUDES="$USER_EXCLUDES ${val//,/ }" ; return ;;
-                 esac ;;
-      dfh-watch) case $arg in
+                 dfh) case $arg in
+                        -Exclude|X)  USER_EXCLUDES="$USER_EXCLUDES ${val//,/ }" ; return ;;
+                        -exclude|x)    MY_EXCLUDES="$MY_EXCLUDES ${val//,/ }"   ; return ;;
+                      esac ;;
+
+           dfh-watch) case $arg in
                      -color|c)  COLOR_SCHEME=$val   ;;
                      -color=*)  COLOR_SCHEME=$val   ;;
                      -delay|d)  WATCH_DELAY=$val    ;;
                      -delay=*)  WATCH_DELAY=$val    ;;
+                   -Exclude|X)  USER_EXCLUDES="$USER_EXCLUDES ${val//,/ }"  ;;
+                   -exclude|x)    MY_EXCLUDES="$MY_EXCLUDES ${val//,/ }"    ;;
                       -help|h)  DO_HELP=true        ;;
                     -header|H)  HEADER_TYPE=$val    ;;
                     -header=*)  HEADER_TYPE=$val    ;;
@@ -338,7 +347,7 @@ eval_argument() {
     case $arg in
          -color|c)  COLOR_SCHEME=$val   ;;
          -color=*)  COLOR_SCHEME=$val   ;;
-         -debug|d)  DO_DEBUG=true       ;;
+         -debug|D)  DO_DEBUG=true       ;;
            -gui|g)  GUI_MODE=true       ;;
           -help|h)  DO_HELP=true        ;;
         -header|H)  HEADER_TYPE=$val    ;;
@@ -358,7 +367,7 @@ eval_argument() {
 #
 #------------------------------------------------------------------------------
 main() {
-    local SHIFT  SHIFT_2  SHORT_STACK="cdegHhQqstVv"
+    local SHIFT  SHIFT_2  SHORT_STACK="cDdegHhQqstVvXx"
     local NO_MPS  ONLY_MPS  BE_SILENT BE_VERBOSE  PARAM_CNT
     local GUI_TEXT SCREEN_WIDTH SCREEN_HEIGHT  NO_SCREEN
     local RESTORE_CURSOR
@@ -627,34 +636,43 @@ do_dfh() {
     local lab_cent="Use%"
     local lab_mp="Mounted on"
 
+    calc_my_excludes "$MY_EXCLUDES"
+
     local w_dev=$(losetup --list --noheadings -O back-file |  awk '{print length}' | sort -r  | head -n1)
     [ ${w_dev:-0} -lt ${#lab_dev} ] && w_dev=${#lab_dev}
 
     # Find max width of all the fields
     local dev type size used avail cent mp
-    local  w_type=$(label_size $lab_type)    w_size=$(label_size $label_size) w_used=$(label_size $lab_used)
-    local w_avail=$(label_size $lab_avail)   w_cent=$(label_size $lab_cent)     w_mp=$(label_size $lab_mp)
+    local  w_type=$(label_size "$lab_type") w_size=$(label_size "$label_size")   w_mp=$(label_size "$lab_mp")
+    local  w_used=$(label_size "$lab_used"  $EXCLUDE_USED)
+    local w_avail=$(label_size "$lab_avail" $EXCLUDE_AVAIL)
+    local  w_cent=$(label_size "$lab_cent"  $EXCLUDE_CENT)
 
     local w_labs=$((w_dev + w_type + w_size + w_used + w_avail + w_cent + w_mp))
 
     while read dev type size used avail cent mp; do
         [ ${#dev}  -gt 0         ] || continue
+
+        local file=$(loop_to_file $dev)
+        [ -n "$file" ] && dev=$file
+
         [ $w_dev   -lt ${#dev}   ] && w_dev=${#dev}
         [ $w_type  -lt ${#type}  ] && w_type=${#type}
         [ $w_size  -lt ${#size}  ] && w_size=${#size}
-        [ $w_used  -lt ${#used}  ] && w_used=${#used}
-        [ $w_avail -lt ${#avail} ] && w_avail=${#avail}
-        [ $w_cent  -lt ${#cent}  ] && w_cent=${#cent}
         [ $w_mp    -lt ${#mp}    ] && w_mp=${#mp}
+        [ -z "$EXCLUDE_USED"  -a $w_used  -lt ${#used}  ] && w_used=${#used}
+        [ -z "$EXCLUDE_AVAIL" -a $w_avail -lt ${#avail} ] && w_avail=${#avail}
+        [ -z "$EXCLUDE_CENT"  -a $w_cent  -lt ${#cent}  ] && w_cent=${#cent}
     done <<Dfh_Loop1
-$(echo "$data" | tail -n+2)
+$(echo "$data")
 Dfh_Loop1
 
-    local w_all=$((w_dev + w_type + w_size + w_used + w_avail + w_cent + w_mp))
+    local w_all=$((w_dev + w_type + w_size + w_used + w_avail + w_cent + w_mp + NUM_SEP * 2))
 
     [ "$GUI_MODE" ] && do_dfh_gui "$data" "$w_all"
 
     local truncate=$((w_all - SCREEN_WIDTH))
+
     if [ $truncate -gt 0 ]; then
         w_dev=$((w_dev - truncate))
         [ $w_dev -lt $MIN_DEV_WIDTH ] && fatal "The screen appears to be way too narrow!"
@@ -664,26 +682,36 @@ Dfh_Loop1
 
     case $HEADER_TYPE in norm|n) h_co=$head_co  ;; esac
 
-    hfmt1="$h_co%-${w_dev}s  %-${w_type}s  %${w_size}s  %${w_used}s  %${w_avail}s  %${w_cent}s  %-${w_mp}s$nc_co\n"
-    hfmt2="$h_co%-${w_dev}s$nc_co  $h_co%-${w_type}s$nc_co  $h_co%${w_size}s$nc_co  $h_co%${w_used}s$nc_co  $h_co%${w_avail}s$nc_co  $h_co%${w_cent}s$nc_co  $h_co%-${w_mp}s$nc_co\n"
+    local hfmt  hfmt_u  hfmt_a  hfmt_c  hfmt_m  my_h_co  my_nc_co
 
-    hfmt=$hfmt1
     case $HEADER_TYPE in
-          rev2|r2) hfmt=$hfmt2 ;;
+        rev2|2) my_h_co=$h_co ; my_nc_co=$nc_co ;;
     esac
+
+    hfmt="$my_h_co%-${w_dev}s$my_nc_co  $my_h_co%-${w_type}s$my_nc_co  $my_h_co%${w_size}s$my_nc_co  "
+    hfmt_u="$my_h_co%${w_used}s$my_nc_co  "
+    hfmt_a="$my_h_co%${w_avail}s$my_nc_co  "
+    hfmt_c="$my_h_co%${w_cent}s$my_nc_co  "
+    hfmt_m="$my_h_co%-${w_mp}s$my_nc_co"
 
     case $HEADER_TYPE in
         rev3|r3)
-            printf "$h_co%s  "   "$(rpad $w_dev   "$lab_dev$nc_co"   )"
-            printf "$h_co%s  "   "$(rpad $w_type  "$lab_type$nc_co"  )"
-            printf "$h_co%s  "   "$(lpad $w_size  "$lab_size$nc_co"  )"
-            printf "$h_co%s  "   "$(lpad $w_used  "$lab_used$nc_co"  )"
-            printf "$h_co%s  "   "$(lpad $w_avail "$lab_avail$nc_co" )"
-            printf "$h_co%s  "   "$(rpad $w_cent  "$lab_cent$nc_co"  )"
+            printf   "$h_co%s  "   "$(rpad $w_dev   "$lab_dev$nc_co")"
+            printf   "$h_co%s  "   "$(rpad $w_type  "$lab_type$nc_co")"
+            printf   "$h_co%s  "   "$(lpad $w_size  "$lab_size$nc_co")"
+            print_if "$EXCLUDE_USED"    "$h_co%s  "   "$(lpad $w_used  "$lab_used$nc_co")"
+            print_if "$EXCLUDE_AVAIL"   "$h_co%s  "   "$(lpad $w_avail "$lab_avail$nc_co")"
+            print_if "$EXCLUDE_CENT"    "$h_co%s  "   "$(rpad $w_cent  "$lab_cent$nc_co")"
             printf "$h_co%s\n"   "$lab_mp$nc_co"  ;;
         *)
-            printf "$hfmt" "$lab_dev"  "$lab_type" "$lab_size" "$lab_used" "$lab_avail" "$lab_cent" "$lab_mp" ;;
+            printf "$hfmt" "$lab_dev"  "$lab_type" "$lab_size"
+            print_if "$EXCLUDE_USED"   "$hfmt_u"   "$lab_used"
+            print_if "$EXCLUDE_AVAIL"  "$hfmt_a"   "$lab_avail"
+            print_if "$EXCLUDE_CENT"   "$hfmt_c"   "$lab_cent"
+            printf   "$hfmt_m\n" "$lab_mp"
     esac
+
+    local fmt="$m_co%-${w_dev}s  $type_co%-${w_type}s  $num_co%${w_size}s$nc_co  "
 
     while read dev type size used avail cent mp; do
         [ ${#dev} -gt 0   ] || continue
@@ -703,10 +731,13 @@ Dfh_Loop1
         fi
         dev=$(my_truncate "$w_dev" "$dev")
 
-        local fmt="$m_co%-${w_dev}s  $type_co%-${w_type}s  $num_co%${w_size}s$nc_co  %${w_used}s  %${w_avail}s  %${w_cent}s  $m_co%-s$nc_co\n"
-        printf "$fmt" "$dev" "$type" "$size" "$used" "$avail" "$cent" "$mp"
+        printf "$fmt" "$dev"  "$type" "$size"
+        print_if "$EXCLUDE_USED"   "%${w_used}s  "   "$used"
+        print_if "$EXCLUDE_AVAIL"  "%${w_avail}s  "  "$avail"
+        print_if "$EXCLUDE_CENT"   "%${w_cent}s  "   "$cent"
+        printf  "$m_co%-s$nc_co\n"                   "$mp"
     done <<Dfh_Loop2
-$(echo "$data" | tail -n+2)
+$(echo "$data")
 Dfh_Loop2
 
     exit 0
@@ -766,6 +797,32 @@ $(echo "$data")
 Device_Info
 }
 
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+calc_my_excludes() {
+    local params=${1//,/ } param
+    NUM_SEP=6
+    for  param in $params; do
+        case $param in
+             used|u) EXCLUDE_USED=true ; NUM_SEP=$((NUM_SEP - 1)) ;;
+            avail|a) EXCLUDE_AVAIL=true; NUM_SEP=$((NUM_SEP - 1)) ;;
+          percent|p) EXCLUDE_CENT=true ; NUM_SEP=$((NUM_SEP - 1)) ;;
+              all|A) calc_my_excludes "u,a,p" ; return            ;;
+        esac
+    done
+}
+
+#------------------------------------------------------------------------------
+#
+#
+#------------------------------------------------------------------------------
+print_if() {
+    local exclude=$1 ; shift
+    [ "$exclude" ] && return
+    printf "$@"
+}
 #------------------------------------------------------------------------------
 #
 #
@@ -865,8 +922,8 @@ show_mounts() {
 
     local w_type=${#lab_type}  w_size=${#lab_size}  w_mp=${#lab_mp} w_file=${#lab_file}
 
-    local  w_type=$(label_size $lab_type)    w_size=$(label_size $label_size)
-    local w_file=$(label_size $lab_file)       w_mp=$(label_size $lab_mp)
+    local  w_type=$(label_size "$lab_type")    w_size=$(label_size "$label_size")
+    local w_file=$(label_size  "$lab_file")      w_mp=$(label_size "$lab_mp")
 
     local w_labs=$((w_type + w_size + w_mp + w_file))
     while read dev type size used avail percent mp; do
@@ -1454,8 +1511,10 @@ max_line_len() {
 # Get size of label and add an offset since that is built in.
 #------------------------------------------------------------------------------
 label_size() {
-    local len=${#1}
-    if [ "$GUI_MODE" ]; then
+    local len=${#1}  exclude=$2
+    if [ "$exclude" ]; then
+        printf 0
+    elif [ "$GUI_MODE" ]; then
         printf "%s"  $((len + YAD_WD_LAB_PAD * DPI /96 / 100))
     else
         printf $len
