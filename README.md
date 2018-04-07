@@ -6,8 +6,12 @@ only one real script and the others are symlinks to it.
 
 What's new?
 -----------
+    version 00.09.00 (Sat Apr  7 10:55:34 MDT 2018)
 
-    isomount version 00.05.00 (Sat Mar 31 11:18:49 MDT 2018)
+* The auto-scaling of yad windows in a work in progress.
+  They work on some systems but not all on all systems.
+
+* Added dfh-watch program that repeatedly calls dfh
 
 * (00.05.00) merge dfh code into isomount!
 
