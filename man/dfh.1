@@ -129,35 +129,61 @@
 .\" ========================================================================
 .\"
 .IX Title "DFH 1"
-.TH DFH 1 "2018-03-31" "Version 00.05.00" "antiX Documentation"
+.TH DFH 1 "2018-04-07" "Version 00.09.00" "antiX Documentation"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 .SH "NAME"
-.Vb 1
-\&    dfh    \-\- list mounted filesystems in a very human friendly format
+.Vb 2
+\&    dfh         \-\- list mounted filesystems in a very human friendly format
+\&    dfh\-watch    \-\- repeatedly list mounted filesystems ...
 .Ve
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-.Vb 1
+.Vb 2
 \&    dfh [options]
+\&    dfh\-watch [options]
 .Ve
 .SH "OPTIONS"
 .IX Header "OPTIONS"
-.Vb 7
-\&    \-c \-\-color=<xxx>     set color scheme to off|low|low2|bw|dark|high
-\&    \-H \-\-header=<type>   change header color: norm, rev1, rev2, rev3
-\&                                             (n,      r1,   r2,   r3)
+.SS "\s-1COMMON OPTION\s0"
+.IX Subsection "COMMON OPTION"
+.Vb 5
+\&    \-c \-\-color=<xxx>     set color scheme to: off|low|low2|bw|dark|high
+\&    \-g \-\-gui             show output in a yad window
 \&    \-h \-\-help            show this usage
+\&    \-H \-\-header=<type>   change header look: norm, rev1, rev2, rev3
+\&                                             (n,      r1,   r2,   r3)
+\&
 \&    \-v \-\-version         show version number and exit
-\&    \-x, \-\-exclude\-type=<xxx>  list of more file types to exclude
-\&                         (comma separated)
+\&
+\&    \-x, \-\-exclude=<xxx>  list of used,avail,percent columns to exclude
+\&    \-X, \-\-Exclude=<xxx>  list of more file system types to exclude
+\&                              (comma delimited)
+.Ve
+.SS "\s-1EXTRA OPTIONS FOR\s0 dfh-watch"
+.IX Subsection "EXTRA OPTIONS FOR dfh-watch"
+.Vb 2
+\&   \-d \-\-delay=<xxx>     delay in fractional seconds
+\&    \-t \-\-top             display at the top of the screen instead of the bottom
 .Ve
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
+.IP "dfh" 4
+.IX Item "dfh"
 List \*(L"interesting\*(R" mounted file systems for humans.  Display in color and
 show the back-files for loop devices.
+.Sp
+Use \-x (\-\-exclude) to exclude the columns [Used, Avail, Used%] with the keys
+[used, avail, percent].  Use the key \*(L"all\*(R" to exclude all of them.
+.IP "dfh-watch" 4
+.IX Item "dfh-watch"
+Repeatedly check to see if the ouput of dfh changes.  If so, clear the screen
+and display the new results.  Do this every \*(L"delay\*(R" seconds (default 1).  The
+delay can be fractional as in \*(L"\-\-delay 0.5\*(R".  By default we display on the
+botton of the bottom of terminal screen/window but you can move it to
+the top with \-\-top.
 .SH "LICENSE"
 .IX Header "LICENSE"
 GPLv3
