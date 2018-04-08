@@ -6,7 +6,11 @@ only one real script and the others are symlinks to it.
 
 What's new?
 -----------
-    version 00.09.00 (Sat Apr  7 10:55:34 MDT 2018)
+    version 00.10.00 (Sun Apr  8 12:53:10 MDT 2018)
+
+* Still working on autoscaling yad windows.  See the
+  tools/ directoy for tools to help automate the creation
+  of the autoscaling.
 
 * The auto-scaling of yad windows in a work in progress.
   They work on some systems but not all on all systems.
