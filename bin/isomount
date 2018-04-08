@@ -73,7 +73,7 @@ GUI_BOLD_FMT='<span color="#0000C0" font_weight="bold" size="larger">%s</span>'
 GUI_BOLD_FMT='<span color="#0000C0" font_weight="bold">%s</span>'
 
 MAIN_NAME=$(basename "$(readlink -f "$0")")
-MOUNT_POINTS=$"mountpoints"
+MOUNT_POINTS=$"mount-points"
 
 MIN_DEV_WIDTH=12
 
