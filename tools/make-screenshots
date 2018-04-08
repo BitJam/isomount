@@ -1,0 +1,32 @@
+#!/bin/bash
+
+DPIs="90 120 250"
+ISO="/data/iso/antiX/antiX-17.1_x64-full.iso"
+DEFAULT_DPI=120
+
+main() {
+    rows=0
+    bin/isoumount all -qQ
+    dpi_shots $rows
+
+    rows=20
+    for i in $(seq 1 10); do
+        bin/isomount $ISO -Qq
+    done
+    dpi_shots $rows
+    tools/set-dpi $DEFAULT_DPI
+}
+
+dpi_shots() {
+    local rows=$1
+
+    for dpi in $DPIs; do
+        tools/set-dpi $dpi
+        bin/show-isomount -gD
+        file="%F_%T@$dpi-r$rows"
+        echo "Press enter for: $file"
+        read xxxx
+        scrot -s $file'-$wx$h.png' -e "mv \$f $PWD/Private/shots"
+    done
+}
+main "$@"
