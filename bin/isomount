@@ -13,7 +13,7 @@ ORIG_CMDLINE="$ME $*"
  ISO_NAME="iso"
   SQ_NAME="sq"
   SQ_FILE="antiX/linuxfs"
-: ${HEADER_TYPE:=rev2}
+: ${HEADER_TYPE:=norm}
 
 # This prevents gtk2 themes from interfering with Pango colors
 export GTK2_RC_FILES=/usr/share/themes/Default/gtk-2.0-key/gtkrc
@@ -678,21 +678,20 @@ Dfh_Loop1
         [ $w_dev -lt $MIN_DEV_WIDTH ] && fatal "The screen appears to be way too narrow!"
     fi
 
-    local hi h_co=$head_co$rev_co hfmt hfmt1 hfmt1
-
-    case $HEADER_TYPE in norm|n) h_co=$head_co  ;; esac
+    local h_co=$m_co$rev_co
+    case $HEADER_TYPE in norm|n) h_co=$m_co  ;; esac
 
     local hfmt  hfmt_u  hfmt_a  hfmt_c  hfmt_m  my_h_co  my_nc_co
 
     case $HEADER_TYPE in
-        rev2|2) my_h_co=$h_co ; my_nc_co=$nc_co ;;
+        rev2|r2) my_h_co=$h_co ; my_nc_co=$nc_co ;;
     esac
 
-    hfmt="$my_h_co%-${w_dev}s$my_nc_co  $my_h_co%-${w_type}s$my_nc_co  $my_h_co%${w_size}s$my_nc_co  "
+    hfmt="$h_co%-${w_dev}s$my_nc_co  $my_h_co%-${w_type}s$my_nc_co  $my_h_co%${w_size}s$my_nc_co  "
     hfmt_u="$my_h_co%${w_used}s$my_nc_co  "
     hfmt_a="$my_h_co%${w_avail}s$my_nc_co  "
     hfmt_c="$my_h_co%${w_cent}s$my_nc_co  "
-    hfmt_m="$my_h_co%-${w_mp}s$my_nc_co"
+    hfmt_m="$my_h_co%-${w_mp}s$nc_co"
 
     case $HEADER_TYPE in
         rev3|r3)
@@ -711,7 +710,7 @@ Dfh_Loop1
             printf   "$hfmt_m\n" "$lab_mp"
     esac
 
-    local fmt="$m_co%-${w_dev}s  $type_co%-${w_type}s  $num_co%${w_size}s$nc_co  "
+    local fmt="$hi_co%-${w_dev}s  $type_co%-${w_type}s  $num_co%${w_size}s$nc_co  "
 
     while read dev type size used avail cent mp; do
         [ ${#dev} -gt 0   ] || continue
@@ -735,7 +734,7 @@ Dfh_Loop1
         print_if "$EXCLUDE_USED"   "%${w_used}s  "   "$used"
         print_if "$EXCLUDE_AVAIL"  "%${w_avail}s  "  "$avail"
         print_if "$EXCLUDE_CENT"   "%${w_cent}s  "   "$cent"
-        printf  "$m_co%-s$nc_co\n"                   "$mp"
+        printf  "$hi_co%-s$nc_co\n"                   "$mp"
     done <<Dfh_Loop2
 $(echo "$data")
 Dfh_Loop2
@@ -957,7 +956,7 @@ Show_Mounts
     printf '\n'
     printf '%s\n' "$iso_mps"
 
-    local  hi  hfmt hfmt1 hfmt1
+    local  hfmt hfmt1 hfmt1
 
     hfmt1="$h_co%-${w_file}s  %-${w_type}s  %${w_size}s  %-${w_mp}s$nc_co\n"
     hfmt2="$h_co%-${w_file}s$nc_co  $h_co%-${w_type}s$nc_co  $h_co%${w_size}s$nc_co  $h_co%-${w_mp}s$nc_co\n"
