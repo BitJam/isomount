@@ -915,11 +915,6 @@ show_mounts() {
     local h_co=$head_co$rev_co
     case $HEADER_TYPE in norm|n) h_co=$head_co  ;; esac
 
-    # if [ -z "$data" ]; then
-    #     say '[%s]' "$h_co$(printf $"There are no %s" "$iso_mps")$nc_co$m_co"
-    #     return
-    # fi
-
     local w_type=${#lab_type}  w_size=${#lab_size}  w_mp=${#lab_mp} w_file=${#lab_file}
 
     local  w_type=$(label_size "$lab_type")    w_size=$(label_size "$label_size")
@@ -940,6 +935,11 @@ Show_Mounts
     local w_all=$((w_file + w_type + w_size  + w_mp))
     [ $w_all -lt $w_labs ] && w_all=$w_labs
     [ "$GUI_MODE" ] && show_mounts_gui "$data" "$w_all"
+
+    if [ -z "$data" ]; then
+        say '[%s]' "$h_co$(printf $"There are no %s" "$iso_mps")$nc_co$m_co"
+        return
+    fi
 
     local clip_mp
     if [ $SCREEN_WIDTH -lt $w_all ]; then
@@ -998,6 +998,13 @@ Show_Mounts
 show_mounts_gui() {
     local data=$1  w_all=$2  text yad_w  yad_h
 
+    local title=$ME
+    if [ "$DO_DEBUG" ]; then
+        title="$ME @ $DPI, rows $(echo "$data" | wc -l), ($VERSION)"
+        text="dpi: $DPI, rows: $(echo "$data" | wc -l), version: $VERSION ($(my_date))\n$text"
+    fi
+    [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
+
     debug1 "dpi-0" "$DPI"
     local bold_actions=$(gui_bold $"Actions")
     local bold_iso_mps=$(gui_bold "$iso_mps")
@@ -1010,8 +1017,6 @@ show_mounts_gui() {
         else
             text=$(printf '%s\n%s\n%s' "$bold_actions" "$GUI_TEXT" "$bold_no_mps")
         fi
-        [ "$DO_DEBUG" ] && text="dpi: $DPI, rows: $(echo "$data" | wc -l), version:  $VERSION ($(my_date))\n$text"
-        [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
 
         text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g')
         #-jbb text="hello world"
@@ -1034,7 +1039,7 @@ show_mounts_gui() {
         text=$(printf '%s\n%s\n%s'  "$bold_actions"  "$GUI_TEXT" "$bold_iso_mps")
     fi
 
-    [ "$DO_DEBUG" ] && text="dpi: $dpi   rows: $(echo "$data" | wc -l)\n$text"
+    [ "$DO_DEBUG" ] && text="dpi: $DPI   rows: $(echo "$data" | wc -l)\n$text"
     [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
 
     text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g')
@@ -1047,8 +1052,6 @@ show_mounts_gui() {
     debug1 "width" "$yad_w"
     debug1 "height" "$yad_h"
 
-    local title=$ME
-    [ "$DO_DEBUG" ] && title="$ME @ $DPI rows $(echo "$data" | wc -l)"
     device_info "$data" | my_yad $YAD_STD_OPTS \
         --title "$title"     \
         --text "$text"       \
