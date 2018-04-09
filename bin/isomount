@@ -759,7 +759,7 @@ do_dfh_gui() {
     debug1 "height" "$yad_h"
 
     title=$ME
-    [ "$DO_DEBUG" ] && title="$ME @ $DPI rows $(echo "$data" | wc -l)"
+    [ "$DO_DEBUG" ] && title="$ME @ $DPI rows $(echo -n "$data" | wc -l)"
 
     dfh_device_info "$data" | my_yad $YAD_STD_OPTS \
         --title  "$title"     \
@@ -999,8 +999,8 @@ show_mounts_gui() {
 
     local title=$ME
     if [ "$DO_DEBUG" ]; then
-        title="$ME @ $DPI, rows $(echo "$data" | wc -l), ($VERSION)"
-        text="dpi: $DPI, rows: $(echo "$data" | wc -l), version: $VERSION ($(my_date))\n$text"
+        title="$ME @ $DPI, rows $(echo -n "$data" | wc -l)"
+        text="dpi: $DPI, rows: $(echo -n "$data" | wc -l), version: $VERSION ($(my_date))\n$text"
     fi
     [ "$BE_VERBOSE" ] && text=$(printf '(%s)\n%s' "$ORIG_CMDLINE" "$text")
 
