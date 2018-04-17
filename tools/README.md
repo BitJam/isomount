@@ -1,5 +1,5 @@
-Tools for the isommount suite
-=============================
+Tools for the isomount suite
+============================
 
 
 The tools make-screenshoots, set-dpi, and parse-images are supposed
