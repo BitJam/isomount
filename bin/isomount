@@ -18,7 +18,7 @@ ORIG_CMDLINE="$ME $*"
 # This prevents gtk2 themes from interfering with Pango colors
 export GTK2_RC_FILES=/usr/share/themes/Default/gtk-2.0-key/gtkrc
 
-         YAD="/usr/bin/yad"
+YAD="/usr/bin/yad"
 #   YAD_IMAGE="/usr/local/lib/antiX/antiX-logo.png"
 YAD_STD_OPTS="--center --width=900 --height=600 --button=gtk-ok:0"
 YAD_ERR_OPTS="--center --width=800 --height=300 --button=gtk-ok:0"
@@ -29,16 +29,16 @@ if [ -n "$YAD_IMAGE" -a -r "$YAD_IMAGE" ]; then
 fi
 
 #==============================================================================
-# Imperical constants for scaling the size of yad windows ...
-# .. with DPI, width and height of the text block and width and height of a
-# table including the header labels.
+# Empirical constants for scaling the size of yad windows...
+# ...with DPI, width and height of the text block and width
+# and height of a table including the header labels.
 #------------------------------------------------------------------------------
 # _HT_ for height and _WD_ for width.
 #
 # _TEXT_ is for the block of text and _DATA_ is for the table
 #
-# Most/all values are in hundreths of a pixel at 96 DPI.  Most scale with DPI
-# but a few don't.
+# Most/all values are in hundreths of a pixel at 96 DPI.
+# Most scale with DPI but a few don't.
 #
 # _PAD = extra space @ 96 DPI
 # _PPC = pixels per character @ 96 DPI
@@ -474,7 +474,7 @@ do_iso_umount() {
 #
 #------------------------------------------------------------------------------
 do_sq_umount() {
-    local name=$SQ_NAME  Ewhere=$1
+    local name=$SQ_NAME  where=$1
     any_umount "$name" $where
 }
 
@@ -1069,7 +1069,7 @@ show_mounts_gui() {
 #------------------------------------------------------------------------------
 # This makes creating a table in yad pretty easy.  Since we don't read the
 # filename directly, we should be ok with spaces there.  Spaces in the other
-# fields would break things but I don't think there ever are.
+# fields would break things but I don't think there ever are any.
 #------------------------------------------------------------------------------
 device_info() {
     local data=$1
@@ -1132,7 +1132,7 @@ my_yad() {
 }
 
 #------------------------------------------------------------------------------
-#  Surround the given text with the Pengo markup we use for bold text in yad.
+#  Surround the given text with the Pango markup we use for bold text in yad.
 #------------------------------------------------------------------------------
 gui_bold() { printf "$GUI_BOLD_FMT" "$*" ;}
 
@@ -1264,8 +1264,8 @@ printN() {
 
 #------------------------------------------------------------------------------
 # Modified (for gui) BOILER PLATE to set the color scheme.  Currently all the
-# ANSI escapes are turned off in GUI-mode.  Someday I may add Pengo markup but
-# I don't have a great way of switching between Pengo and ANSI.  It might be
+# ANSI escapes are turned off in GUI-mode.  Someday I may add Pango markup but
+# I don't have a great way of switching between Pango and ANSI.  It might be
 # very easy by using an exec():
 #
 #       set_color gui
@@ -1496,7 +1496,7 @@ scale_yad_height() {
 }
 
 #------------------------------------------------------------------------------
-# It is more convenient to call this as a function rather then echo and
+# It is more convenient to call this as a function rather than echo and
 # pipe in the caller
 #------------------------------------------------------------------------------
 count_lines() { echo "$1" | wc -l ;}
