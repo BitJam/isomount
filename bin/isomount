@@ -474,7 +474,7 @@ do_iso_umount() {
 #
 #------------------------------------------------------------------------------
 do_sq_umount() {
-    local name=$SQ_NAME  Ewhere=$1
+    local name=$SQ_NAME  where=$1
     any_umount "$name" $where
 }
 
