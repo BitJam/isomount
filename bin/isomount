@@ -18,7 +18,7 @@ ORIG_CMDLINE="$ME $*"
 # This prevents gtk2 themes from interfering with Pango colors
 export GTK2_RC_FILES=/usr/share/themes/Default/gtk-2.0-key/gtkrc
 
-         YAD="/usr/bin/yad"
+YAD="/usr/bin/yad"
 #   YAD_IMAGE="/usr/local/lib/antiX/antiX-logo.png"
 YAD_STD_OPTS="--center --width=900 --height=600 --button=gtk-ok:0"
 YAD_ERR_OPTS="--center --width=800 --height=300 --button=gtk-ok:0"
@@ -29,8 +29,8 @@ if [ -n "$YAD_IMAGE" -a -r "$YAD_IMAGE" ]; then
 fi
 
 #==============================================================================
-# Emperical constants for scaling the size of yad windows ...
-# .. with DPI, width and height of the text block and width
+# Empirical constants for scaling the size of yad windows...
+# ...with DPI, width and height of the text block and width
 # and height of a table including the header labels.
 #------------------------------------------------------------------------------
 # _HT_ for height and _WD_ for width.
@@ -1505,7 +1505,11 @@ scale_yad_height() {
 
 #------------------------------------------------------------------------------
 # It is more convenient to call this as a function rather than echo and
+<<<<<<< HEAD
 # pipe inside the calling routine
+=======
+# pipe in the caller
+>>>>>>> 4146974f07af4b33e561de4befe0252e73876c4a
 #------------------------------------------------------------------------------
 count_lines() { echo "$1" | wc -l ;}
 
