@@ -1319,7 +1319,7 @@ set_colors() {
          inst_co=$cyan       ;  mark_co=$rev_co    ;     grep_co="1;34"
          bold_co=$brown      ;    fs_co=$lt_blue   ;      num_co=$brown   ;
          date_co=$cyan       ;  head_co=$gray      ;   quest_co=$green    ;
-          dev_co=$gray       ;    hi_co=$gray      ;    quit_co=$brown    ;
+          dev_co=$gray       ;    hi_co=$nc_co     ;    quit_co=$brown    ;
           err_co=$red        ;   lab_co=$cyan      ;  version_co=$gray    ;
         fname_co=$gray       ;     m_co=$cyan      ;     warn_co=$brown   ; ;;
 
