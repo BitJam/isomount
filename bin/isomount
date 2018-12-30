@@ -1505,11 +1505,7 @@ scale_yad_height() {
 
 #------------------------------------------------------------------------------
 # It is more convenient to call this as a function rather than echo and
-<<<<<<< HEAD
 # pipe inside the calling routine
-=======
-# pipe in the caller
->>>>>>> 4146974f07af4b33e561de4befe0252e73876c4a
 #------------------------------------------------------------------------------
 count_lines() { echo "$1" | wc -l ;}
 
