@@ -56,17 +56,25 @@ YAD_WD_TEXT_PPC=640
 YAD_WD_TEXT_PAD=5000
 
 #---- Table height and width --------------------------------------------------
-YAD_HT_DATA_PPC=1800
-YAD_HT_DATA_PAD=2000
 YAD_HT_DATA_OFF=11800
+YAD_HT_DATA_PAD=2000
+YAD_HT_DATA_PPC=1800
 YAD_HT_DATA_PPR=600
+
+### --- via Octave!
+# YAD_HT_DATA_OFF=1087
+# YAD_HT_DATA_PAD=1532
+# YAD_HT_DATA_PPC=1494
+# YAD_HT_DATA_PPR=905
+
+
 
  YAD_WD_LAB_PAD=200     # padding to table labels in pixels
 YAD_WD_DATA_PPC=640     #
 YAD_WD_DATA_PAD=6000    #
 
 #---- Button height  ------------------------------------------------------
-  YAD_HT_BUTTON=0000
+  YAD_HT_BUTTON=3920
 
 
 GUI_BOLD_FMT='<span color="#0000C0" font_weight="bold" size="larger">%s</span>'
