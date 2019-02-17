@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="00.10.01"
+VERSION="00.20.00"
 VERSION_DATE="Sun Feb 17 02:17:52 MST 2019"
 
 MY_NAME=${0##*/}
