@@ -7,6 +7,8 @@ MY_NAME=${0##*/}
 ME=${ACTION:=$MY_NAME}
 ORIG_CMDLINE="$ME $*"
 
+PATH=$PATH:/sbin/usr/sbin
+
  MAX_DIRS=20
 
   MNT_DIR="/mnt/iso"
