@@ -1038,8 +1038,6 @@ show_mounts_gui() {
         fi
 
         text=$(echo "$text" | sed -e 's/^/  /' -e 's/\\n/\n  /g')
-        #-jbb text="hello world"
-        #-jbb text="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx x x x xxxxxxxxxxx xxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxx xxxxx xxx"
         yad_w=$(scale_yad_width   "$text" "$data" $w_all)
         yad_h=$(scale_yad_height  "$text" "$data")
 
@@ -1098,12 +1096,6 @@ device_info() {
     while read dev type size used avail percent mp; do
         [ ${#dev} -gt 0   ] || continue
         file=$(loop_to_file $dev)
-        #file=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        #size=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        #type=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        #file=
-        #size=
-        #type=
         my_echo -en "$file\n$type\n$size\n$mp\n"
     done <<Device_Info
 $(echo "$data")
@@ -1120,12 +1112,6 @@ data_width() {
     while read dev type size used avail cent mp; do
         [ ${#dev} -gt 0 ] || continue
         file=$(loop_to_file $dev)
-        #file=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        #size=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        #type=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        #file=
-        #size=
-        #type=
         [ $w_file -lt ${#file} ] && w_file=${#file}
         [ $w_type -lt ${#type} ] && w_type=${#type}
         [ $w_size -lt ${#size} ] && w_size=${#size}
