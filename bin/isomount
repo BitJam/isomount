@@ -288,7 +288,7 @@ usage() {
             isoumount) iso_umount_usage    ;;
              squmount) sq_umount_usage     ;;
        clean-isomount) clean_usage         ;;
-        show-isomount) show_moounts_usage  ;;
+        show-isomount) show_mounts_usage   ;;
                     *) fatal $"Unknown program name %s" $ME ;;
     esac
 
