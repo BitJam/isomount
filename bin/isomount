@@ -1103,7 +1103,7 @@ Device_Info
 }
 
 #------------------------------------------------------------------------------
-# Get the combined maximum width of colums.  Â
+# Get the combined maximum width of columns.
 #------------------------------------------------------------------------------
 data_width() {
     local data=$1
