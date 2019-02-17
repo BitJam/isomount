@@ -6,7 +6,16 @@ only one real script and the others are symlinks to it.
 
 What's new?
 -----------
-    version 00.10.00 (Sun Apr  8 12:53:10 MDT 2018)
+    version 00.20.00 (Sun Feb 17 02:17:52 MST 2019)
+
+* Minor bug fixes
+
+* exclude more pseudo filesystems (sigh)
+
+* Dedupe entries in dfh (bind mounts, etc)
+  use --dupes to keep them in
+
+* (00.10.00):
 
 * Still working on autoscaling yad windows.  See the
   tools/ directoy for tools to help automate the creation
