@@ -212,7 +212,7 @@ show the back-files for loop devices.
 
 ${bold_co}Options:$nc_co
     $m_co-c --color=<xxx>    $nc_co set color scheme to: off|low|low2|bw|dark|high
-    $m_co   --dupes          $nc_co show duplicates (bind mounts, etc)
+    $m_co-D --dupes          $nc_co show duplicates (bind mounts, etc)
     $m_co-g --gui            $nc_co show output in a yad window
     $m_co-h --help           $nc_co show this usage
     $m_co-H --header=<type>  $nc_co change header look: norm, rev1, rev2, rev3
@@ -336,7 +336,7 @@ eval_argument() {
                  dfh) case $arg in
                         -Exclude|X)  USER_EXCLUDES="$USER_EXCLUDES ${val//,/ }" ; return ;;
                         -exclude|x)    MY_EXCLUDES="$MY_EXCLUDES ${val//,/ }"   ; return ;;
-                            -dupes)    ALLOW_DUPES=true                         ; return ;;
+                          -dupes|D)    ALLOW_DUPES=true                         ; return ;;
                       esac ;;
 
            dfh-watch) case $arg in
