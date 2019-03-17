@@ -665,6 +665,7 @@ do_dfh() {
     while read dev type size used avail cent mp; do
         [ ${#dev}  -gt 0         ] || continue
 
+        [ "$dev" = '/dev/root' ] && dev=$(readlink -f $dev)
         local file=$(loop_to_file $dev)
         [ -n "$file" ] && dev=$file
 
@@ -727,6 +728,8 @@ Dfh_Loop1
     while read dev type size used avail cent mp; do
         [ ${#dev} -gt 0   ] || continue
         local type_co=$warn_co
+
+        [ "$dev" = '/dev/root' ] && dev=$(readlink -f $dev)
 
         if echo "$dev" | grep -q "^/dev/loop[0-9]" ; then
             used=-
@@ -796,6 +799,7 @@ dedupe_dev() {
     local dev_list dev rest
     while read dev rest; do
         [ -z "$dev" ] &&  continue
+        [ "$dev" = '/dev/root' ] && dev=$(readlink -f $dev)
         [ -n "$dev_list" ] && eval "case \$dev in $dev_list) continue;; esac"
         [ "$ALLOW_DUPES" ] || dev_list="$dev_list${dev_list:+|}$dev"
         echo "$dev $rest"
@@ -809,6 +813,8 @@ dfh_device_info() {
 
     while read dev type size used avail cent mp; do
         [ ${#dev} -gt 0   ] || continue
+
+        [ "$dev" = '/dev/root' ] && dev=$(readlink -f $dev)
         file=$(loop_to_file $dev)
         [ -n "$file" ] && dev=$file
 
@@ -944,6 +950,8 @@ show_mounts() {
     local w_labs=$((w_type + w_size + w_mp + w_file))
     while read dev type size used avail percent mp; do
         [ ${#dev} -gt 0 ] || continue
+
+        [ "$dev" = '/dev/root' ] && dev=$(readlink -f $dev)
         local file=$(loop_to_file $dev)
         [ $w_file -lt ${#file} ] && w_file=${#file}
         [ $w_type -lt ${#type} ] && w_type=${#type}
@@ -1002,6 +1010,7 @@ Show_Mounts
 
     while read dev type size used avail percent mp; do
         [ ${#dev} -gt 0   ] || continue
+        [ "$dev" = '/dev/root' ] && dev=$(readlink -f $dev)
         file=$(loop_to_file $dev)
         [ "$clip_mp" ] && mp=${mp#$MNT_DIR/}
         file=$(my_truncate "$w_file" "$file")
@@ -1097,6 +1106,7 @@ device_info() {
     local dev type size used avail percent mp file
     while read dev type size used avail percent mp; do
         [ ${#dev} -gt 0   ] || continue
+        [ "$dev" = '/dev/root' ] && dev=$(readlink -f $dev)
         file=$(loop_to_file $dev)
         my_echo -en "$file\n$type\n$size\n$mp\n"
     done <<Device_Info
@@ -1113,6 +1123,7 @@ data_width() {
     local dev type size used avail cent mp file
     while read dev type size used avail cent mp; do
         [ ${#dev} -gt 0 ] || continue
+        [ "$dev" = '/dev/root' ] && dev=$(readlink -f $dev)
         file=$(loop_to_file $dev)
         [ $w_file -lt ${#file} ] && w_file=${#file}
         [ $w_type -lt ${#type} ] && w_type=${#type}
