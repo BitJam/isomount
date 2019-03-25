@@ -516,14 +516,14 @@ do_usb_mount() {
     $SUDO mount -t tmpfs -o size=1m tmpfs "$where"
 
     if [ "$part" = 'part' ]; then
-        mount_partition "$where" "$dev" 'main'
+        mount_partition "$where" "$dev" "$dev"
     fi
 
     local i part
     for i in $(seq 1 5); do
         part=$(get_partition "$dev" $i)
         test -b "$part" || break
-        mount_partition "$where" "$part" "part-$i"
+        mount_partition "$where" "$part" "$dev-$i"
     done
 }
 
@@ -531,7 +531,7 @@ do_usb_mount() {
 #
 #------------------------------------------------------------------------------
 mount_partition() {
-    local top=$1  dev=$2  name=$3
+    local top=$1  dev=$2  name=${3##*/}
     local dir=$top/$name
     $SUDO mkdir -p "$dir" || fatal $"Could not make directory %s" "$dir"
     $SUDO mount "$dev" "$dir"
