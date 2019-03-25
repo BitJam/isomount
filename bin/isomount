@@ -1061,7 +1061,10 @@ verbose() {
 # add colors.
 #------------------------------------------------------------------------------
 show_mounts() {
-    local data=$(df -ahT | grep -E " $MNT_DIR/($ISO_NAME|$SQ_NAME|$USB_NAME)[0-9]")
+    local data=$(df -ahT \
+        | grep -E " $MNT_DIR/($ISO_NAME|$SQ_NAME|$USB_NAME)[0-9]" \
+        | grep -v "^tmpfs")
+
     local iso_mps=$(printN "%1 %2" "$MAIN_NAME" "$MOUNT_POINTS")
 
     local DPI=$(get_dpi)
