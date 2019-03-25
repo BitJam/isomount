@@ -14,7 +14,11 @@ PATH=$PATH:/sbin/usr/sbin
   MNT_DIR="/mnt/iso"
  ISO_NAME="iso"
   SQ_NAME="sq"
-  SQ_FILE="antiX/linuxfs"
+ USB_NAME="usb"
+
+ SQ_FILES="antiX/linuxfs casper/filesystem.squashfs"
+ PERSIST_FILES="antiX/rootfs antiX/homefs"
+
 : ${HEADER_TYPE:=norm}
 
 # This prevents gtk2 themes from interfering with Pango colors
@@ -105,7 +109,8 @@ iso_mount_usage() {
     cat <<Usage
 ${bold_co}Usage:${m_co} $ME [options] iso-file-1 [iso-file-2 ...]${nc_co}
     Mount the iso files specified at directories like $fname.  For
-    antiX and MX iso files then also mount the /$SQ_FILE squashfs file.
+    antiX and MX iso files then also mount the squashfs file:
+$(echo $SQ_FILES | tr -s " " "\n" | sed "s/^/      /")
 Usage
     opt_usage
 }
@@ -404,6 +409,8 @@ main() {
     case $base in
           isomount|sqmount)  max_param=20  ; min_param=1 ;;
         isoumount|squmount)  max_param=1                 ;;
+                  usbmount)  max_param=1   ; min_param=1 ;;
+                 usbumount) max_param=1                  ;;
     esac
 
     case $base in
@@ -412,6 +419,8 @@ main() {
               sqmount)   ;;
             isoumount)   ;;
              squmount)   ;;
+             usbmount)   ;;
+            usbumount)   ;;
        clean-isomount)   ;;
         show-isomount)   ;;
                     *) fatal $"Unknown program name %s" $ME ;;
@@ -435,6 +444,8 @@ main() {
               sqmount)  do_sq_mount   "$CMD_CMDS"           ;;
             isoumount)  do_iso_umount "$CMD_CMDS"           ;;
              squmount)  do_sq_umount  "$CMD_CMDS"           ;;
+             usbmount)  do_usb_mount  "$CMD_CMDS"           ;;
+            usbumount)  do_usb_umount "$CMD_CMDS"           ;;
        clean-isomount)  clean_mounts                        ;;
         show-isomount)  show_mounts ; exit 0                ;;
                     *)  fatal $"Unknown program name %s" $ME ;;
@@ -470,6 +481,106 @@ do_sq_mount() {
     done <<Do_Sq_Mount
 $(echo -e "$data")
 Do_Sq_Mount
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+do_usb_mount() {
+    name=$USB_NAME dev=$(expand_device "$1")
+
+    test -e "$dev" || fatal $"Device %s does not exit" "$dev"
+    test -b "$dev" || fatal $"%s is not a block device" "$dev"
+
+    local type=$(lsblk --noheadings --nodeps -o type "$dev")
+
+    case part in
+        part|disk);;
+        *) fatal $"Unrecognized device type %s" "$type"
+    esac
+    if ! mountpoint -q "$MNT_DIR"; then
+        $SUDO mkdir -p "$MNT_DIR"
+        $SUDO mount -t tmpfs -o size=1m tmpfs "$MNT_DIR"
+        mountpoint -q "$MNT_DIR" || fatal $"Could not mount %s as %s"  "$MNT_DIR" 'tmpfs'
+    fi
+
+    for n in $(seq 1 $MAX_DIRS); do
+        where=$MNT_DIR/$name$n
+        test -d "$where" || break
+    done
+
+    test -d "$where" && fatal $"Directory %s and below are already taken" "$where"
+    $SUDO mkdir -p "$where"
+    test -d "$where" || fatal $"Failed to create directorey  %s" "$where"
+
+    $SUDO mount -t tmpfs -o size=1m tmpfs "$where"
+
+    if [ "$part" = 'part' ]; then
+        mount_partition "$where" "$dev" 'main'
+    fi
+
+    local i part
+    for i in $(seq 1 5); do
+        part=$(get_partition "$dev" $i)
+        test -b "$part" || break
+        mount_partition "$where" "$part" "part-$i"
+    done
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+mount_partition() {
+    local top=$1  dev=$2  name=$3
+    local dir=$top/$name
+    $SUDO mkdir -p "$dir" || fatal $"Could not make directory %s" "$dir"
+    $SUDO mount "$dev" "$dir"
+    mountpoint -q "$dir" || fatal $"Failed to mount device %s" "$dev"
+
+    local file sq_file
+    for file in $SQ_FILES; do
+        sq_file=$dir/$file
+        test  -e "$sq_file" || continue
+        local where="$dir-$(basename $sq_file)"
+        mkdir -p "$where"
+        $SUDO mount "$sq_file" "$where"  -o loop,user,ro,exec -t squashfs
+    done
+    local p_file
+     for file in $PERSIST_FILES; do
+        p_file=$dir/$file
+        test  -e "$p_file" || continue
+        local where="$dir-$(basename $p_file)"
+        mkdir -p "$where"
+        $SUDO mount "$p_file" "$where"  -o loop,user,exec
+    done
+}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+do_usb_umount() {
+    local name=$USB_NAME  where=$1
+
+    if [ -n "$where" ]; then
+        mountpoint -q "$where" || fatal $"%s is not a mountpoint" "$where"
+        name=${where##*/}
+        name=${name%%[0-9]*}
+        case $name in
+            $USB_NAME) ;;
+            *) fatal $"Unrecognized name %s" "$name" ;;
+        esac
+
+    else
+        local n
+        for n in $(seq $MAX_DIRS -1 1); do
+            where=$MNT_DIR/$name$n
+            mountpoint -q "$where" && break
+        done
+        mountpoint -q "$where" || fatal $"No %s mountpoints found" "$name"
+    fi
+
+    umount_under "$where"
+    do_umount "$where"
 }
 
 #------------------------------------------------------------------------------
@@ -528,9 +639,14 @@ any_mount() {
 
     say $"Mounted %s at %s" "$hi_co$what$m_co" "$hi_co$where$m_co"
 
-    local sq_file=$where/$SQ_FILE
-    [ "$name" == "$ISO_NAME" -a -e "$sq_file" ] || return
-    do_sq_mount "$sq_file"
+    [ "$name" == "$ISO_NAME" ] || return
+
+    local file sq_file
+    for file in $SQ_FILES; do
+        sq_file=$where/$file
+        test  -e "$sq_file" || continue
+        do_sq_mount "$sq_file"
+    done
 }
 
 #------------------------------------------------------------------------------
@@ -578,18 +694,9 @@ any_umount() {
             mountpoint -q "$where" && break
         done
         mountpoint -q "$where" || fatal $"No %s mountpoints found" "$name"
-
-    fi
-    local sq_file=$where/$SQ_FILE
-
-    if [ "$name" == "$ISO_NAME" -a -e "$sq_file" ]; then
-
-        local sq_mp
-        for sq_mp in $(files_to_loops_to_mps $where); do
-            mountpoint -q "$sq_mp" && do_umount "$sq_mp"
-        done
     fi
 
+    umount_under "$where"
     do_umount "$where"
 }
 
@@ -601,12 +708,39 @@ do_umount() {
     verbose 'do_umount(%s)' "$bold_co$*$quest_co"
     local where=$1
     local what=$(mp_to_file $where)
-	$SUDO umount  "$where"
+	$SUDO umount --recursive  "$where"
 	mountpoint -q "$where" && fatal $"Failed to umount %s" "$where"
 	$SUDO rmdir   "$where" || fatal $"Failed to remove %s directory" "$where"
 
     say_unmounted "$where" "$what"
 }
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+umount_under() {
+    local top=$1  dir  failed  cnt=0
+    while read dir; do
+        test -d "$dir" || continue
+        #is_mountpoint "$dir" || continue
+        $SUDO umount --recursive "$dir"
+        if ! mountpoint -q "$dir"; then
+            say_unmounted "$dir"
+            continue
+        fi
+        failed="$failed $dir"
+        cnt=$((cnt + 1))
+    done<<Umount_All
+$(mount | grep "^$top/[^ ]" | awk '{print $3}' | tac)
+Umount_All
+
+    case $cnt in
+        0) return 0 ;;
+        1) fatal "One directory is still mounted: %s" "$failed" ;;
+        *) fatal "These directories are still mounted: %s" "$failed" ;;
+    esac
+}
+
 
 #------------------------------------------------------------------------------
 #
@@ -855,7 +989,7 @@ print_if() {
 #
 #------------------------------------------------------------------------------
 say_unmounted() {
-    local where=$1  what=${2:-$(mp_to_file $where)}
+    local where=$1 what=${2:-$(mp_to_file "$1")}
 
     if [ -n "$what" ]; then
         say $"Unmounted %s (%s)" "$hi_co$where$m_co" "$hi_co$what$m_co"
@@ -927,7 +1061,7 @@ verbose() {
 # add colors.
 #------------------------------------------------------------------------------
 show_mounts() {
-    local data=$(df -ahT | grep -E " $MNT_DIR/($ISO_NAME|$SQ_NAME)[0-9]")
+    local data=$(df -ahT | grep -E " $MNT_DIR/($ISO_NAME|$SQ_NAME|$USB_NAME)[0-9]")
     local iso_mps=$(printN "%1 %2" "$MAIN_NAME" "$MOUNT_POINTS")
 
     local DPI=$(get_dpi)
@@ -1014,7 +1148,7 @@ Show_Mounts
         file=$(loop_to_file $dev)
         [ "$clip_mp" ] && mp=${mp#$MNT_DIR/}
         file=$(my_truncate "$w_file" "$file")
-        printf "$fmt" "$file" "$type" "$size" "$mp"
+        printf "$fmt" "${file:-$dev}" "$type" "$size" "$mp"
     done <<Show_Mounts
 $(echo "$data")
 Show_Mounts
@@ -1437,6 +1571,31 @@ read_params() {
         eval_argument "$arg" "$val"
         [ "$END_CMDLINE" ] && return
     done
+}
+
+#------------------------------------------------------------------------------
+# Allow users to use abbreviations like sdd1 or /sdd1 or dev/sdd1
+#------------------------------------------------------------------------------
+expand_device() {
+    case $1 in
+        /dev/*)  [ -b "$1"      ] && echo "$1"      ;;
+         dev/*)  [ -b "/$1"     ] && echo "/$1"     ;;
+            /*)  [ -b "/dev$1"  ] && echo "/dev$1"  ;;
+             *)  [ -b "/dev/$1" ] && echo "/dev/$1" ;;
+    esac
+}
+
+
+#------------------------------------------------------------------------------
+# echo the canonical name for the Nth partition on a drive.
+#------------------------------------------------------------------------------
+get_partition() {
+    local dev=$1  num=$2
+
+    case $dev in
+       *mmcblk*) echo  ${dev}p$num  ;;
+              *) echo  ${dev}$num   ;;
+    esac
 }
 
 #------------------------------------------------------------------------------
