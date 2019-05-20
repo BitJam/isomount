@@ -74,7 +74,6 @@ YAD_HT_DATA_PPR=600
 # YAD_HT_DATA_PPR=905
 
 
-
  YAD_WD_LAB_PAD=200     # padding to table labels in pixels
 YAD_WD_DATA_PPC=640     #
 YAD_WD_DATA_PAD=6000    #
@@ -228,7 +227,6 @@ ${bold_co}Options:$nc_co
     $m_co-x, --exclude=<xxx> $nc_co list of used,avail,percent columns to exclude
     $m_co-X, --Exclude=<xxx> $nc_co list of more file system types to exclude
                               (comma delimited)
-
 Usage
     exit 0
 }
@@ -410,7 +408,7 @@ main() {
           isomount|sqmount)  max_param=20  ; min_param=1 ;;
         isoumount|squmount)  max_param=1                 ;;
                   usbmount)  max_param=1   ; min_param=1 ;;
-                 usbumount) max_param=1                  ;;
+                 usbumount)  max_param=1                 ;;
     esac
 
     case $base in
@@ -1061,7 +1059,9 @@ verbose() {
 # add colors.
 #------------------------------------------------------------------------------
 show_mounts() {
-    local data=$(df -ahT \
+
+    local exclude_list=$(echo $EXCLUDE_FS_TYPES $USER_EXCLUDES | sed -r "s/\s+/ -x /g")
+    local data=$(df -ahT -x $exclude_list \
         | grep -E " $MNT_DIR/($ISO_NAME|$SQ_NAME|$USB_NAME)[0-9]" \
         | grep -v "^tmpfs")
 
