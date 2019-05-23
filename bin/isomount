@@ -9,7 +9,7 @@ ORIG_CMDLINE="$ME $*"
 
 PATH=$PATH:/sbin/usr/sbin
 
- MAX_DIRS=20
+ MAX_DIRS=40
 
   MNT_DIR="/mnt/iso"
  ISO_NAME="iso"
@@ -405,7 +405,7 @@ main() {
 
     local max_param=0  min_param=0 base=$ME
     case $base in
-          isomount|sqmount)  max_param=20  ; min_param=1 ;;
+          isomount|sqmount)  max_param=$MAX_DIRS  ; min_param=1 ;;
         isoumount|squmount)  max_param=1                 ;;
                   usbmount)  max_param=1   ; min_param=1 ;;
                  usbumount)  max_param=1                 ;;
