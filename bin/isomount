@@ -266,6 +266,18 @@ Usage
 #
 #------------------------------------------------------------------------------
 usage() {
+    if [ -n "$NO_YAD" ]; then
+        _usage | grep -v -- --gui
+        echo
+        printf "GUI mode disable because the %s program is missing" "$YAD"
+        echo
+    else
+        _usage
+    fi
+    exit 0
+}
+
+_usage() {
 
     show_version
     printf '\n'
@@ -385,7 +397,10 @@ main() {
     local SHIFT  SHIFT_2  SHORT_STACK="cDdegHhQqstVvXx"
     local NO_MPS  ONLY_MPS  BE_SILENT BE_VERBOSE  PARAM_CNT
     local GUI_TEXT SCREEN_WIDTH SCREEN_HEIGHT  NO_SCREEN
-    local RESTORE_CURSOR
+    local RESTORE_CURSOR NO_YAD
+
+    test -x $YAD || NO_YAD=true
+    NO_YAD=true
 
     SCREEN_HEIGHT=$(stty size | cut -d" " -f1)
     SCREEN_WIDTH=$(stty size | cut -d" " -f2)
@@ -396,6 +411,11 @@ main() {
     shift $SHIFT_2
 
     [ "$NO_SCREEN" ] && GUI_MODE=true
+
+    if [ -n "$GUI_MODE" -a -n "$NO_YAD" ]; then
+        GUI_MODE=
+        fatal "GUI mode is not available without the %s program" "$YAD"
+    fi
 
     if [ "$GUI_MODE" ]; then
         set_colors gui
