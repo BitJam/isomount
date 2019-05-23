@@ -135,11 +135,12 @@ Usage
 iso_umount_usage() {
     local fname=$MNT_DIR/${ISO_NAME}N
     cat <<Usage
-${bold_co}Usage:${m_co} $ME [options] [$fname|'all']${nc_co}
+${bold_co}Usage:${m_co} $ME [options] [$fname|'all'|N]${nc_co}
     Umount the most recently mounted iso file.  If a mountpoint is
     given then unmount that mountpoint instead.
 
-    If 'all' is given then unmount all of our mounts.
+    If 'all' is given then unmount all of our mounts.  If a number is given
+    then unmount that number of iso mounts.
 Usage
     opt_usage
 }
@@ -150,12 +151,13 @@ Usage
 sq_umount_usage() {
     local fname=$MNT_DIR/${SQ_NAME}N
     cat <<Usage
-${bold_co}Usage:${m_co} $ME [options] [$fname|'all']${nc_co}
+${bold_co}Usage:${m_co} $ME [options] [$fname|'all'|N]${nc_co}
     Umount the most recently mounted squashfs file.  If a mountpoint is
     given then unmount that mountpoint instead.  In both cases we also
     delete the mountpoint directory and the $fname@<name> file.
 
-    If 'all' is given then unmount all of our mounts.
+    If 'all' is given then unmount all of our mounts.  If a number is given
+    then umount that number of squashfs mounts.
 Usage
     opt_usage
 }
@@ -722,6 +724,13 @@ any_umount() {
                 fi
             done
             [ "$is_done" ] && break
+        done
+        return
+
+    elif [[ $where =~ ^[0-9]+$ ]]; then
+        local i cnt=$where
+        for i in $(seq 1 $cnt); do
+            any_umount "$name"
         done
         return
 
