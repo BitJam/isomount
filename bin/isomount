@@ -17,6 +17,9 @@ PATH=$PATH:/sbin/usr/sbin
  USB_NAME="usb"
 
  SQ_FILES="antiX/linuxfs casper/filesystem.squashfs live/filesystem.squashfs"
+ MIN_SQ_SIZE="100M"
+ MAX_SQ_DEPTH=4
+
  PERSIST_FILES="antiX/rootfs antiX/homefs"
 
 : ${HEADER_TYPE:=norm}
@@ -555,14 +558,29 @@ mount_partition() {
     $SUDO mount "$dev" "$dir"
     mountpoint -q "$dir" || fatal $"Failed to mount device %s" "$dev"
 
-    local file sq_file
+    local file sq_file found_sq
     for file in $SQ_FILES; do
         sq_file=$dir/$file
         test  -e "$sq_file" || continue
         local where="$dir-$(basename $sq_file)"
         mkdir -p "$where"
         $SUDO mount "$sq_file" "$where"  -o loop,user,ro,exec -t squashfs
+        found_sq=true
     done
+
+    if [ -z "$found_sq" ]; then
+        while read file; do
+            test -e "$file" || continue
+            file -b "$file" | grep -qi "Squashfs" || continue
+            local where="$dir-$(basename $sq_file)"
+            mkdir -p "$where"
+            $SUDO mount "$sq_file" "$where"  -o loop,user,ro,exec -t squashfs
+            break
+        done<<Sqfs_Files
+$(find $dir -maxdepth 4 -size +100M -printf "%k %h/%f\n" | sort -nr sed "s/^[^ ]* //")
+Sqfs_Files
+    fi
+
     local p_file
      for file in $PERSIST_FILES; do
         p_file=$dir/$file
@@ -660,11 +678,22 @@ any_mount() {
     [ "$name" == "$ISO_NAME" ] || return
 
     local file sq_file
-    for file in $SQ_FILES; do
+    for file in $SQ_FILES_x; do
         sq_file=$where/$file
         test  -e "$sq_file" || continue
         do_sq_mount "$sq_file"
+        return
     done
+
+    while read sq_file; do
+        test -e "$sq_file" || continue
+        file -b "$sq_file" | grep -qi "^Squashfs" || continue
+        do_sq_mount "$sq_file"
+        break
+    done<<Sqfs_Files
+$(find $where -maxdepth $MAX_SQ_DEPTH -size +$MIN_SQ_SIZE -printf "%k %h/%f\n" | sort -nr | sed "s/^[^ ]* //")
+Sqfs_Files
+
 }
 
 #------------------------------------------------------------------------------
