@@ -16,7 +16,7 @@ PATH=$PATH:/sbin/usr/sbin
   SQ_NAME="sq"
  USB_NAME="usb"
 
- SQ_FILES="antiX/linuxfs casper/filesystem.squashfs live/filesystem.squashfs"
+ SQ_FILES="/antiX/linuxfs.new antiX/linuxfs casper/filesystem.squashfs live/filesystem.squashfs"
  MIN_SQ_SIZE="100M"
  MAX_SQ_DEPTH=4
 
