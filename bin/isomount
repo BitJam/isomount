@@ -678,11 +678,10 @@ mount_sq_under() {
         test -e "$sq_file" || continue
         file -b "$sq_file" | grep -qi "^Squashfs" || continue
         do_sq_mount "$sq_file"
-        break
+        return
     done<<Sqfs_Files
 $(find $where -maxdepth $MAX_SQ_DEPTH -size +$MIN_SQ_SIZE -printf "%k %h/%f\n" | sort -nr | sed "s/^[^ ]* //")
 Sqfs_Files
-
 }
 
 #------------------------------------------------------------------------------
