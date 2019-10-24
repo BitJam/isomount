@@ -515,7 +515,7 @@ do_usb_mount() {
     test -e "$dev" || fatal $"Device %s does not exit" "$dev"
     test -b "$dev" || fatal $"%s is not a block device" "$dev"
 
-    local type=$(lsblk --noheadings --nodeps -o type "$dev")
+    local type=$(lsblk --noheadings --nodeps -o TYPE "$dev")
 
     case part in
         part|disk);;
